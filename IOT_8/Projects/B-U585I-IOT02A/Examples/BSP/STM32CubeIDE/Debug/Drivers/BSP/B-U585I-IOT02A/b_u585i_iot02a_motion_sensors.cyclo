@@ -1,0 +1,15 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:81:9:BSP_MOTION_SENSOR_Init	10
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:131:9:BSP_MOTION_SENSOR_DeInit	4
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:165:9:BSP_MOTION_SENSOR_GetCapabilities	5
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:196:9:BSP_MOTION_SENSOR_ReadID	5
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:229:9:BSP_MOTION_SENSOR_Enable	10
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:272:9:BSP_MOTION_SENSOR_Disable	10
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:316:9:BSP_MOTION_SENSOR_GetAxes	11
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:359:9:BSP_MOTION_SENSOR_GetAxesRaw	11
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:402:9:BSP_MOTION_SENSOR_GetSensitivity	11
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:445:9:BSP_MOTION_SENSOR_GetOutputDataRate	11
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:488:9:BSP_MOTION_SENSOR_SetOutputDataRate	10
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:531:9:BSP_MOTION_SENSOR_GetFullScale	11
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:574:9:BSP_MOTION_SENSOR_SetFullScale	11
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:628:16:ISM330DHCX_Probe	7
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_motion_sensors.c:691:16:IIS2MDC_Probe	6

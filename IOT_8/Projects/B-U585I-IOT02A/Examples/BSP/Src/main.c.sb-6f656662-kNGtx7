@@ -1,0 +1,2791 @@
+
+/**
+ ******************************************************************************
+ * @file    Examples/BSP/Src/main.c
+ * @author  MCD Application Team
+ * @brief   Main program body
+ ******************************************************************************
+ * @attention
+ *
+ * Copyright (c) 2021 STMicroelectronics.
+ * All rights reserved.
+ *
+ * This software is licensed under terms that can be found in the LICENSE file
+ * in the root directory of this software component.
+ * If no LICENSE file comes with this software, it is provided AS-IS.
+ *
+ ******************************************************************************
+ */
+
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+#include "embedded_ML.h"
+
+#include <math.h>
+#include <sys/stat.h>
+#include <stdlib.h>
+#include <errno.h>
+#include <stdio.h>
+#include <signal.h>
+#include <time.h>
+#include <sys/time.h>
+#include <sys/times.h>
+
+#define RCC_SYS_CLOCK_FREQ 160000000 // should equal HAL_RCC_GetSysClockFreq()
+#define RCC_HCLK_FREQ 160000000 // should equal HAL_RCC_GetHCLKFreq()
+
+
+
+
+
+/** @addtogroup STM32U5xx_HAL_Examples
+ * @{
+ */
+
+/** @addtogroup BSP
+ * @{
+ */
+/* Private variables --------------------------------------------------------*/
+__IO FlagStatus UserButtonPressed = RESET;
+
+/* Private typedef -----------------------------------------------------------*/
+/* Private define ------------------------------------------------------------*/
+#if defined(__GNUC__) && !defined(__ARMCC_VERSION)
+extern void initialise_monitor_handles(void);
+#endif
+/* Private macro -------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
+BSP_DemoTypedef  BSP_examples[]=
+{
+		{Led_demo,    "LED"},
+		{Button_demo, "BUTTON"},
+		{Rs_demo,     "RangingSensor"},
+		{Camera_demo, "CAMERA"},
+		{Ms_demo,     "MotionSensor"},
+		{Es_demo,     "EnvSensor"},
+		{Ls_demo,     "LightSensor"},
+		{OSPI_NOR_demo, "OSPI NOR"},
+		{OSPI_RAM_demo, "OSPI RAM"},
+		{AudioRecord_demo, "Audio"},
+		{EEPROM_demo, "EEPROM"}
+};
+__IO uint8_t DemoIndex = 0;
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+static void CACHE_Enable(void);
+
+
+
+/* Private functions ---------------------------------------------------------*/
+
+
+
+/**
+ * @brief  Main program
+ * @param  None
+ * @retval None
+ */
+int main(void)
+{
+	int32_t  result  = 0;
+	int32_t  enable_system_test;
+	BSP_MOTION_SENSOR_Axes_t         axes;
+
+	int32_t i, j, k;
+
+	float loop_time, frequency;
+	float Input_Signal, Input_Signal_Prev, Signal_Filter_LP, Signal_Filter_Prev_LP;
+	float Signal_Filter_HP, Signal_Filter_Prev_HP;
+
+
+	uint32_t msTick, msTickPrev = 0;
+	float outputDataRate;
+	float sensitivity;
+	int32_t fullScale;
+	int32_t accel_final, accel_initial, accel_mag, gyro_mag;
+	int32_t Cycle_Time[256];
+	int32_t X_Offset, Y_Offset, Z_Offset;
+
+	int32_t rotation_rate_mag_threshold, acceleration_mag_threshold;
+	float r, theta, phi;
+	float Acc_X, Acc_Y, Acc_Z;
+	float Acc_X_Norm, Acc_Y_Norm, Acc_Z_Norm;
+	const float RADIAN = 57.298;
+	float Roll_Argument;
+
+	int32_t state;
+	int32_t msTickStateChange;
+	int32_t msTickDwell = 5000;
+	int32_t Z_Threshold = 800;
+	int32_t state_prev;
+
+	float acc_x, acc_y;
+	float acc_x_prev, acc_y_prev;
+	float acc_x_filter_lp, acc_y_filter_lp;
+	float acc_x_filter_hp;
+	float acc_y_filter_hp;
+	float acc_x_filter_hp_prev, acc_y_filter_hp_prev;
+	float acc_x_filter_lp_prev, acc_y_filter_lp_prev;
+	float disp_x = 0;
+	float vel_x = 0;
+	float vel_x_prev = 0;
+	float disp_y = 0;
+	float vel_y = 0;
+	float vel_y_prev = 0;
+	float disp_x_prev, disp_y_prev, disp_x_filter_prev, disp_x_filter, disp_y_filter_prev,disp_y_filter;
+	float sample_period;
+	float W_HP, I_HP, iir_HP_0, iir_HP_1, iir_HP_2;
+	float W_LP, I_LP, iir_LP_0, iir_LP_1, iir_LP_2;
+	float W_HP_DSP, I_HP_DSP, iir_HP_0_DSP, iir_HP_1_DSP, iir_HP_2_DSP;
+	float W_LP_DSP, I_LP_DSP, iir_LP_0_DSP, iir_LP_1_DSP, iir_LP_2_DSP;
+	int32_t HP_Filter_Enable, LP_Filter_Enable;
+	int32_t start_time;
+	int32_t period_start, period_stop;
+	float time_diff, mean_time_diff;
+	int32_t initialize_state;
+	int32_t calibration_count;
+	int32_t time_diff_count = 0;
+
+	float gyro_rate_x, gyro_rate_y;
+	float gyro_rate_x_prev, gyro_rate_y_prev;
+	float gyro_rate_x_filter_lp, gyro_rate_y_filter_lp;
+	float gyro_rate_x_filter_hp;
+	float gyro_rate_y_filter_hp;
+	float gyro_rate_x_filter_hp_prev, gyro_rate_y_filter_hp_prev;
+	float gyro_rate_x_filter_lp_prev, gyro_rate_y_filter_lp_prev;
+	float angle_x = 0;
+	float angle_y = 0;
+	float angle_x_prev, angle_y_prev, angle_x_filter_prev, angle_x_filter, angle_y_filter_prev,angle_y_filter;
+	float W_HP_GYRO, I_HP_GYRO, iir_HP_Gyro_0, iir_HP_Gyro_1, iir_HP_Gyro_2;
+	float W_LP_GYRO, I_LP_GYRO, iir_LP_Gyro_0, iir_LP_Gyro_1, iir_LP_Gyro_2;
+	int32_t HP_Filter_Gyro_Enable, LP_Filter_Gyro_Enable;
+	float integration_interval;
+
+
+	int32_t Mag_Mean_N_X, Mag_Mean_E_X, Mag_Mean_S_X, Mag_Mean_W_X;
+	int32_t Mag_Mean_N_Y, Mag_Mean_E_Y, Mag_Mean_S_Y, Mag_Mean_W_Y;
+	int32_t Mag_Mean_N_Z_U, Mag_Mean_N_Z_D;
+	int32_t Mag_Mean_X, Mag_Mean_Y, Mag_Mean_Z;
+	int32_t Mag_Offset_X, Mag_Offset_Y, Mag_Offset_Z;
+	float Heading, Heading_Without_Tilt_Correction;
+	float Pitch, Roll;
+	float Mag_Tilt_Corrected_X, Mag_Tilt_Corrected_Y;
+
+
+
+	float ground_truth[2];
+	float error, net_error;
+	//float weights[81];
+	int32_t xorand_cycle_count;
+
+	float dedw[81];
+	float bias[15];
+	unsigned int network_topology[3] = { 3, 9, 6 };
+	int32_t number_weights;
+	float output[6];
+	float x[3];
+	float y[6];
+	float weights_initial[81];
+
+	int32_t hasTrained;
+
+	int32_t number_weights_ss;
+	int32_t number_bias_ss;
+	int32_t number_outputs_ss;
+
+
+
+//#if defined(__GNUC__) && !defined(__ARMCC_VERSION)
+	initialise_monitor_handles();	/*rtt*/
+	//printf("Semihosting Test...\n");
+//#endif
+
+
+
+
+	/* STM32U5xx HAL library initialization:
+       - Configure the Flash prefetch
+       - Configure the Systick to generate an interrupt each 1 msec
+       - Set NVIC Group Priority to 3
+       - Low Level Initialization
+	 */
+	HAL_Init();
+	/* Enable the Instruction Cache */
+	CACHE_Enable();
+
+	/* Configure the System clock to have a frequency of 160 MHz */
+	SystemClock_Config();
+
+	/*
+	 * Initialize User Button
+	 */
+
+
+	result = Ms_Button_Init();
+	if (result < 0){
+		printf("Initialization Error %i\n", result);
+	}
+
+
+	enable_system_test = SYSTEM_TEST;
+
+	while (enable_system_test == 1){
+
+
+		if(ENABLE_EMBEDDED_ML_XORAND_DEMONSTRATION == 1){
+
+
+			printf("\n");
+			printf("Embedded ML XOR-AND Press User Button to Start and Stop\n");
+
+
+			number_weights = network_topology[0]*network_topology[1] + network_topology[1]*network_topology[2];
+
+			/* Initialize random values for weights */
+
+			srand(1);
+
+			for (i = 0; i < number_weights; i++){
+				weights_initial[i] = (float)rand()/RAND_MAX;
+			}
+
+			/*
+			 * XOR-AND Input Values corresponding to output Ground Truth values
+			 * The neural network includes 3 input neurons
+			 *
+			 */
+
+			float x0[3] = { 0.0, 0.0, 0.0 };  // Corresponds to output 0 0
+			float x1[3] = { 0.0, 1.0, 0.0 };  // Corresponds to output 1 0
+			float x2[3] = { 0.0, 1.0, 1.0 };  // Corresponds to output 1 1
+			float x3[3] = { 1.0, 1.0, 1.0 };  // Corresponds to output 0 1
+			float x4[3] = { 0.0, 0.0, 1.0 };  // Corresponds to output 0 0
+			float x5[3] = { 1.0, 0.0, 0.0 };  // Corresponds to output 1 0
+			float x6[3] = { 1.0, 0.0, 1.0 };  // Corresponds to output 1 0
+			float x7[3] = { 1.0, 1.0, 0.0 };  // Corresponds to output 0 0
+
+
+			User_Button_Wait();
+
+			for (i = 0; i < 15; i++){
+				bias[i] = 0.5;
+			}
+			for (i = 0; i < 6; i++){
+				output[i] = 0.0;
+			}
+			for (i = 0; i < 81; i++){
+				dedw[i] = 0.0;
+			}
+
+			ANN net;
+			net.weights = weights_initial;
+			net.dedw = dedw;
+			net.bias = bias;
+			net.topology = network_topology;
+			net.n_layers = 3;
+			net.n_weights = number_weights;
+			net.n_bias = 15;
+			net.output = output;
+
+
+			net.eta = 0.2;     //Learning Rate
+			net.beta = 0.005;    //Bias Learning Rate
+			net.alpha = 0.25;   //Momentum Coefficient
+			net.output_activation_function = &relu;
+			net.hidden_activation_function = &relu;;
+
+			/*
+			 * Initialize neural network
+			 */
+
+			init_ann(&net);
+
+			xorand_cycle_count = 0;
+
+
+			while (xorand_cycle_count < XORAND_CYCLES){
+
+				/*
+				 * Initiate train and test cycles
+				 */
+
+				i = 0;
+
+				while (i < N_EPOCH && UserButtonPressed == 0) {
+
+					i++;
+
+					/*
+					 * Compute input and output ground truth
+					 */
+
+					generate_xorand(x, y, i);
+
+					/*
+					 * Train network on input and ground truth
+					 */
+
+					train_ann(&net, x, y);
+
+					/*
+					 * After completion of a number of epochs, N_REPORT
+					 * perform neural network test execution, display
+					 * resulting outputs and output error
+					 */
+
+					if (i % N_REPORT == 0 || i == 0 || ((i < 500) && (i % 100 == 0)) ) {
+						printf("\n\n        Epoch: %i\n", i);
+						printf("    Ground         Network\n");
+						printf("    Truth          Outputs\n");
+						printf("   1	  2       1      2\n");
+						printf("_____________________________\n");
+						net_error = 0;
+
+						/*
+						 * Execute trained network and compute Output Error
+						 * with Ground Truth supplied in ground_truth array
+						 */
+
+						run_ann(&net, x0);
+						ground_truth[0] = 0.0;
+						ground_truth[1] = 0.0;
+						Output_Error(2, &net, ground_truth, &error);
+						net_error = net_error + error;
+
+						run_ann(&net, x1);
+						ground_truth[0] = 1.0;
+						ground_truth[1] = 0.0;
+						Output_Error(2, &net, ground_truth, &error);
+						net_error = net_error + error;
+
+						run_ann(&net, x2);
+						ground_truth[0] = 1.0;
+						ground_truth[1] = 1.0;
+						Output_Error(2, &net, ground_truth, &error);
+						net_error = net_error + error;
+
+						run_ann(&net, x3);
+						ground_truth[0] = 0.0;
+						ground_truth[1] = 1.0;
+						Output_Error(2, &net, ground_truth, &error);
+						net_error = net_error + error;
+
+						run_ann(&net, x4);
+						ground_truth[0] = 0.0;
+						ground_truth[1] = 0.0;
+						Output_Error(2, &net, ground_truth, &error);
+						net_error = net_error + error;
+
+						run_ann(&net, x5);
+						ground_truth[0] = 1.0;
+						ground_truth[1] = 0.0;
+						Output_Error(2, &net, ground_truth, &error);
+						net_error = net_error + error;
+
+						run_ann(&net, x6);
+						ground_truth[0] = 1.0;
+						ground_truth[1] = 0.0;
+						Output_Error(2, &net, ground_truth, &error);
+						net_error = net_error + error;
+
+						run_ann(&net, x7);
+						ground_truth[0] = 0.0;
+						ground_truth[1] = 0.0;
+						Output_Error(2, &net, ground_truth, &error);
+						net_error = net_error + error;
+
+						printf("\nTotal Mean Squared Error: %0.3f", net_error);
+					}
+				}
+
+				printf("\nTrain and Test Complete at Epoch: %i\n", i);
+				xorand_cycle_count++;
+			}
+		}
+
+
+		/* Accelerometer Test with Gesture Recognition */
+
+		printf("Accelerometer Test: Start and Stop with User Button Click\n");
+
+		User_Button_Wait();
+		result = Ms_Accel_Init();
+
+		while (1)
+		{
+
+			while (UserButtonPressed == 0)
+			{
+				msTick = HAL_GetTick();
+				if(msTick % DATA_PERIOD_MS == 0 && msTickPrev != msTick)
+				{
+					msTickPrev = msTick;
+
+					result = 0;
+					if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+					if (result < 0){
+						printf("Sampling Error %i\n", result);
+					}
+
+					printf("Time %i, Period %i, Accelerometer (milli-g) X = %i, Y = %i, , Z = %i\n", msTickPrev, (-msTickPrev + HAL_GetTick()), axes.xval, axes.yval, axes.zval);
+				}
+			}
+
+			/*
+			printf("\n\nAccelerometer Response Time Test: Start and Stop with User Button Click\n");
+
+			User_Button_Wait();
+
+			while (UserButtonPressed == 0)
+			{
+				result = 0;
+				if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+				if (result < 0){
+					printf("Sampling Error %i\n", result);
+				}
+				accel_initial = axes.xval;
+
+				result = 0;
+				if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+				if (result < 0){
+					printf("Sampling Error %i\n", result);
+				}
+				accel_final = axes.xval;
+
+				if (accel_final != accel_initial){
+					printf("T %i, D %i, X_d %i\n", HAL_GetTick(), (-msTickPrev + HAL_GetTick()), (int)(accel_final - accel_initial));
+					msTickPrev = HAL_GetTick();
+				}
+			}
+
+*/
+			printf("\n\nProcessor System Cycle Rate Test: Start with User Button Click\n");
+			User_Button_Wait();
+
+			j = 0;
+
+			msTickPrev = HAL_GetTick();
+
+			while (j < 1000000)
+			{
+				j++;
+			}
+
+			msTick = HAL_GetTick();
+
+			j = 1000000;
+			if ((msTick - msTickPrev) > 0){
+				printf("Processor System Cycle Time =  %0.2e (sec)\t Cycle Rate = %0.2e (Hz) \n", 1e-3*((float)(msTick - msTickPrev)/(float)j), 1000*(float)(j)/((float)(msTick - msTickPrev)));
+			}
+
+			printf("\n\nAccelerometer Sampling Rate Test: Start with User Button Click\n");
+			User_Button_Wait();
+
+			j = 0;
+
+			while (j < 256)
+			{
+				result = 0;
+				if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+				if (result < 0){
+					printf("Sampling Error %i\n", result);
+				}
+				Cycle_Time[j] = HAL_GetTick();
+				j++;
+			}
+
+
+			j = 254;
+			if ((Cycle_Time[j] - Cycle_Time[0]) > 0){
+				printf("Sensor Sample Period = %0.2e (sec)\t Sensor Sample Rate = %0.2e (Hz) \n", 1e-3*(float)(Cycle_Time[j] - Cycle_Time[0])/(float)(j), 1000*(float)(j)/((float)(Cycle_Time[j] - Cycle_Time[1])));
+			}
+
+
+			printf("\n\nAccelerometer Event Detection Test: Start and Stop with User Button Click\n");
+			User_Button_Wait();
+
+
+			acceleration_mag_threshold = 1200;
+
+			printf("Acceleration Magnitude Event Detection Threshold: %i (milli-g) \n", acceleration_mag_threshold);
+
+			while (UserButtonPressed == 0)
+			{
+				result = 0;
+				if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+				if (result < 0){
+					printf("Sampling Error %i\n", result);
+				}
+				msTick = HAL_GetTick();
+				accel_mag = axes.xval*axes.xval + axes.yval*axes.yval + axes.zval*axes.zval;
+				accel_mag = sqrt(accel_mag);
+
+				if (accel_mag > acceleration_mag_threshold ){
+					printf("Event Time %i, X = %i, Y = %i, , Z = %i, |Acc| = %i\n", msTick, axes.xval, axes.yval, axes.zval, accel_mag);
+				}
+			}
+
+			printf("\nGyroscope Test: Start and Stop with User Button Click\n");
+			User_Button_Wait();
+
+			result = Ms_Gyro_Init();
+			if (result < 0){
+				printf("Initialization Error %i\n", result);
+			}
+
+			while (UserButtonPressed == 0)
+			{
+				msTick = HAL_GetTick();
+				if(msTick % DATA_PERIOD_MS == 0 && msTickPrev != msTick)
+				{
+					msTickPrev = msTick;
+
+					result = 0;
+					if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_GYRO, &axes) != BSP_ERROR_NONE) result--;
+					if (result < 0){
+						printf("Sampling Error %i\n", result);
+					}
+
+					printf("Time %i, Period %i, X = %i, Y = %i, , Z = %i\n", msTickPrev, (-msTickPrev + HAL_GetTick()), axes.xval, axes.yval, axes.zval);
+				}
+			}
+
+
+			printf("\n\nGyroscope Event Detection Test: Start and Stop with User Button Click\n");
+
+			rotation_rate_mag_threshold = 1500;
+		    printf("Rotation Rate Magnitude Event Detection Threshold: %i (milli-degree/s) \n", rotation_rate_mag_threshold);
+
+
+			User_Button_Wait();
+
+			while (UserButtonPressed == 0)
+			{
+				result = 0;
+				if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_GYRO, &axes) != BSP_ERROR_NONE) result--;
+				if (result < 0){
+					printf("Sampling Error %i\n", result);
+				}
+				msTick = HAL_GetTick();
+				gyro_mag = axes.xval*axes.xval + axes.yval*axes.yval + axes.zval*axes.zval;
+				gyro_mag = sqrt(gyro_mag);
+
+				if (gyro_mag > rotation_rate_mag_threshold){
+					printf("Angular Velocity (mdeg/sec): Time %i, X = %i, Y = %i, , Z = %i, |Ang Velocity| = %i\n", msTick, axes.xval, axes.yval, axes.zval, gyro_mag);
+				}
+
+			}
+
+			printf("\n\nGyroscope Event Detection Test Using Offset Correction: Start and Stop with User Button Click\n");
+			User_Button_Wait();
+
+			HAL_Delay(1000);
+
+			printf("Place IoT Node at Rest on Table and Maintain Motionless\n");
+
+			HAL_Delay(3000);
+
+			printf("5 Second Zero Offset Measurement Starting\n");
+
+			msTickPrev = HAL_GetTick();
+
+			X_Offset = 0;
+			Y_Offset = 0;
+			Z_Offset = 0;
+
+			j = 0;
+
+			while ((HAL_GetTick() - msTickPrev) < 5000){
+				HAL_Delay(100);
+				j = j + 1;
+				result = 0;
+				if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_GYRO, &axes) != BSP_ERROR_NONE) result--;
+				if (result < 0){
+					printf("Sampling Error %i\n", result);
+				}
+				X_Offset = X_Offset + axes.xval;
+				Y_Offset = Y_Offset + axes.yval;
+				Z_Offset = Z_Offset + axes.zval;
+			}
+			X_Offset = X_Offset/j;
+			Y_Offset = Y_Offset/j;
+			Z_Offset = Z_Offset/j;
+
+			printf("Rotation Rate Offsets (milli-deg/s): X_Offset %i, Y_Offset %i, Z_Offset %i\n", X_Offset, Y_Offset, Z_Offset);
+
+			UserButtonPressed = RESET;
+
+			rotation_rate_mag_threshold = 1500;
+			printf("Rotation Rate Magnitude Event Detection Threshold: %i (milli-degree/s) \n", rotation_rate_mag_threshold);
+
+
+			printf("\nGyroscope Event Detection Test: Start and Stop with User Button Click\n");
+			User_Button_Wait();
+
+			while (UserButtonPressed == 0)
+			{
+				HAL_Delay(100);
+				result = 0;
+				if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_GYRO, &axes) != BSP_ERROR_NONE) result--;
+				if (result < 0){
+					printf("Sampling Error %i\n", result);
+				}
+				axes.xval = axes.xval - X_Offset;
+				axes.yval = axes.yval - Y_Offset;
+				axes.zval = axes.zval - Z_Offset;
+
+				msTick = HAL_GetTick();
+				gyro_mag = axes.xval*axes.xval + axes.yval*axes.yval + axes.zval*axes.zval;
+				gyro_mag = sqrt(gyro_mag);
+
+				if (gyro_mag > rotation_rate_mag_threshold){
+					printf("Event - Angular Velocity (mdeg/sec): Time %i, X = %i, Y = %i, , Z = %i, |Ang Velocity| = %i\n", msTick, axes.xval, axes.yval, axes.zval, gyro_mag);
+				}
+
+			}
+			UserButtonPressed = RESET;
+
+
+			printf("\n\nGyroscope Event Detection Test with Reduced Threshold: Start and Stop with User Button Click\n");
+			rotation_rate_mag_threshold = 500;
+			printf("\nRotation Rate Magnitude Event Detection Threshold: %i (milli-degree/s) \n", rotation_rate_mag_threshold);
+
+			User_Button_Wait();
+
+
+
+			while (UserButtonPressed == 0)
+			{
+				HAL_Delay(100);
+				result = 0;
+				if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_GYRO, &axes) != BSP_ERROR_NONE) result--;
+				if (result < 0){
+					printf("Sampling Error %i\n", result);
+				}
+
+				axes.xval = axes.xval - X_Offset;
+				axes.yval = axes.yval - Y_Offset;
+				axes.zval = axes.zval - Z_Offset;
+
+				msTick = HAL_GetTick();
+				gyro_mag = axes.xval*axes.xval + axes.yval*axes.yval + axes.zval*axes.zval;
+				gyro_mag = sqrt(gyro_mag);
+
+				if (gyro_mag > rotation_rate_mag_threshold){
+					printf("Event - Angular Velocity (mdeg/sec): Time %i, X = %i, Y = %i, , Z = %i, |Ang Velocity| = %i\n", msTick, axes.xval, axes.yval, axes.zval, gyro_mag);
+				}
+
+			}
+
+			printf("\n\nPlatform Angle Computation: Start and Stop with User Button Click\n");
+			User_Button_Wait();
+
+			result = Ms_Accel_Init();
+
+			while (UserButtonPressed == 0)
+			{
+
+					if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+					if (result < 0){
+						printf("Sampling Error %i\n", result);
+					}
+
+					HAL_Delay(500);
+
+					Acc_X = (float)axes.xval;
+					Acc_Y = (float)axes.yval;
+					Acc_Z = (float)axes.zval;
+
+					accel_mag = axes.xval*axes.xval + axes.yval*axes.yval + axes.zval*axes.zval;
+					accel_mag = sqrt(accel_mag);
+
+
+					r = (float)accel_mag;
+					Acc_Z_Norm = Acc_Z/r;
+					if (Acc_Z_Norm > 1.0){
+						Acc_Z_Norm = 1.0;
+					}
+					if (Acc_Z_Norm < -1.0){
+						Acc_Z_Norm = -1.0;
+					}
+					theta = acos(Acc_Z_Norm)*RADIAN;
+					phi = atan2(Acc_Y, Acc_X)*RADIAN;
+
+					printf("Orientation: \tr = %0.1f (milli-g)\tTheta = %0.1f (degrees)\t Phi = %0.1f (degrees)\n", r, theta, phi);
+
+					Acc_X_Norm = Acc_X/accel_mag;
+					Acc_Y_Norm = Acc_Y/accel_mag;
+
+					Pitch = -RADIAN*asin(Acc_X_Norm);
+					Roll_Argument = Acc_Y_Norm/cos(Pitch);
+					if (Roll_Argument > 1.0){
+						Roll_Argument = 1.0;
+					}
+					if (Roll_Argument < -1.0){
+						Roll_Argument = -1.0;
+					}
+
+					Roll = -RADIAN*asin(Roll_Argument);
+					printf("Orientation: \tPitch = %0.1f (degrees)\tRoll = %0.1f (degrees)\n", Pitch, Roll);
+
+			}
+
+
+
+			printf("\n\nGesture Recognition: Start and Stop with User Button Click\n");
+			printf("Dwell Time Configured for %i (seconds)\n", msTickDwell/1000);
+			printf("Z Axis Acceleration Configured for %i (milli-g)\n", Z_Threshold);
+
+			User_Button_Wait();
+
+			result = Ms_Accel_Init();
+			if (result < 0){
+				printf("Initialization Error %i\n", result);
+			}
+
+			state_prev = 0;
+			state = 0;
+			printf("Initial State = %i\n", state_prev);
+			while (UserButtonPressed == 0)
+			{
+				msTick = HAL_GetTick();
+				if(msTick % DATA_PERIOD_MS == 0 && msTickPrev != msTick)
+				{
+					msTickPrev = msTick;
+
+					if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+					if (result < 0){
+						printf("Sampling Error %i\n", result);
+					}
+
+					switch(state){
+
+					case 0:
+						if (axes.zval < -Z_Threshold ){
+							state = 1;
+							msTickStateChange = msTick;
+							if (state != state_prev){
+								printf("State = %i\n", state);
+								state_prev = state;
+							}
+						}
+						break;
+
+					case 1:
+						if (axes.zval > Z_Threshold && (msTick - msTickStateChange) < msTickDwell){
+							state = 2;
+							msTickStateChange = msTick;
+
+						} else if ((msTick - msTickStateChange) > msTickDwell){
+							state = 3;
+							msTickStateChange = msTick;
+							if (state != state_prev){
+								printf(" Gesture Not Completed, Return to Upright, State = %i\n", state);
+								state_prev = state;
+							}
+						}
+						break;
+
+					case 2:
+						if (state != state_prev){
+							printf("State = %i\n", state);
+							state_prev = state;
+						}
+						printf("Gesture Pattern Detected\n");
+						state = 0;
+						printf("Sensor Returned to Upright, State = %i\n", state);
+
+						break;
+
+					case 3:
+						if(axes.zval > Z_Threshold){
+							state = 0;
+							msTickStateChange = msTick;
+							if (state != state_prev){
+								printf("Sensor Returned to Upright, State = %i\n", state);
+								state_prev = state;
+							}
+							break;
+						}
+					}
+				}
+			} /* Gesture Recognition */
+
+		} /* Accelerometer and System Data Rate and Gesture Recognition */
+
+
+
+		printf("\n\nMagnetometer Test: Start with User Button Click\n\n");
+
+		User_Button_Wait();
+
+		result = Mg_Init();
+		if (result < 0){
+			printf("Initialization Error %i\n", result);
+		}
+/*
+		if (BSP_MOTION_SENSOR_GetFullScale(1, MOTION_MAGNETO, &fullScale) != BSP_ERROR_NONE) result--;
+		if (fullScale != 50) result--;
+
+		if (BSP_MOTION_SENSOR_SetOutputDataRate(1, MOTION_MAGNETO, 80.0f) != BSP_ERROR_NONE) result--;
+		if (BSP_MOTION_SENSOR_GetOutputDataRate(1, MOTION_MAGNETO, &outputDataRate) != BSP_ERROR_NONE) result--;
+		if (outputDataRate != 100.0f) result--;
+
+		if (BSP_MOTION_SENSOR_SetOutputDataRate(1, MOTION_MAGNETO, 50.0f) != BSP_ERROR_NONE) result--;
+		if (BSP_MOTION_SENSOR_GetOutputDataRate(1, MOTION_MAGNETO, &outputDataRate) != BSP_ERROR_NONE) result--;
+		if (outputDataRate != 50.0f) result--;
+
+		if (BSP_MOTION_SENSOR_GetSensitivity(1, MOTION_MAGNETO, &sensitivity) != BSP_ERROR_NONE) result--;
+
+
+		printf("Magnetometer Full Scale Range = %i (Gauss)\n", fullScale);
+		printf("Magnetometer Data Rate %0.1f (Hz) Sensitivity (milli-Gauss) %0.1f\n", outputDataRate, sensitivity);
+		result = 0;
+*/
+
+		Ms_Accel_Init();
+
+		initialize_state = 0;
+
+
+		while (UserButtonPressed == 0)
+		{
+
+			if (ENABLE_MAGNETOMETER_OFFSET_MEASUREMENT == 0 && initialize_state == 0 ){
+				printf("Magnetometer Measurement Starting, Press User Button to Stop \n");
+				initialize_state = 1;
+			}
+
+			/* Set 1 milli-second cycle time */
+
+			HAL_Delay(1);
+
+			if (ENABLE_MAGNETOMETER_OFFSET_MEASUREMENT == 1){
+
+				printf("Magnetometer Calibration : Orient North and Press User Button\n");
+				User_Button_Wait();
+				i = 0;
+				while (i < 10)
+				{
+					Mag_Mean_N_X = 0;
+					Mag_Mean_N_Y = 0;
+					result = 0;
+					if (BSP_MOTION_SENSOR_GetAxes(1, MOTION_MAGNETO, &axes) != BSP_ERROR_NONE) result--;
+					if (result < 0){
+						printf("Sampling Error %i\n", result);
+					}
+					Mag_Mean_N_X = Mag_Mean_N_X + axes.xval;
+					Mag_Mean_N_Y = Mag_Mean_N_Y + axes.xval;
+					i++;
+					HAL_Delay(100);
+				}
+				Mag_Mean_N_X = Mag_Mean_N_X/(i - 1);
+				Mag_Mean_N_Y = Mag_Mean_N_Y/(i - 1);
+
+				printf("Magnetometer Means: X %i\t Y %i\n", Mag_Mean_N_X, Mag_Mean_N_Y);
+
+				printf("Magnetometer Calibration : Orient East and Press User Button\n");
+				User_Button_Wait();
+				i = 0;
+				while (i < 10)
+				{
+					Mag_Mean_E_X = 0;
+					Mag_Mean_E_Y = 0;
+					result = 0;
+					if (BSP_MOTION_SENSOR_GetAxes(1, MOTION_MAGNETO, &axes) != BSP_ERROR_NONE) result--;
+					if (result < 0){
+						printf("Sampling Error %i\n", result);
+					}
+					Mag_Mean_E_X = Mag_Mean_E_X + axes.xval;
+					Mag_Mean_E_Y = Mag_Mean_E_Y + axes.yval;
+					i++;
+					HAL_Delay(100);
+				}
+				Mag_Mean_E_X = Mag_Mean_E_X/(i - 1);
+				Mag_Mean_E_Y = Mag_Mean_E_Y/(i - 1);
+				printf("Magnetometer Means: X %i\t Y %i\n", Mag_Mean_E_X, Mag_Mean_E_Y);
+
+				printf("Magnetometer Calibration : Orient South and Press User Button\n");
+				User_Button_Wait();
+				i = 0;
+				while (i < 10)
+				{
+					Mag_Mean_S_X = 0;
+					Mag_Mean_S_Y = 0;
+					result = 0;
+					if (BSP_MOTION_SENSOR_GetAxes(1, MOTION_MAGNETO, &axes) != BSP_ERROR_NONE) result--;
+					if (result < 0){
+						printf("Sampling Error %i\n", result);
+					}
+					Mag_Mean_S_X = Mag_Mean_S_X + axes.xval;
+					Mag_Mean_S_Y = Mag_Mean_S_Y + axes.yval;
+					i++;
+					HAL_Delay(100);
+				}
+				Mag_Mean_S_X = Mag_Mean_S_X/(i - 1);
+				Mag_Mean_S_Y = Mag_Mean_S_Y/(i - 1);
+				printf("Magnetometer Means: X %i\t Y %i\n", Mag_Mean_S_X, Mag_Mean_S_Y);
+
+				printf("Magnetometer Calibration : Orient West and Press User Button\n");
+				User_Button_Wait();
+				i = 0;
+				while (i < 10)
+				{
+					Mag_Mean_W_X = 0;
+					Mag_Mean_W_Y = 0;
+					result = 0;
+					if (BSP_MOTION_SENSOR_GetAxes(1, MOTION_MAGNETO, &axes) != BSP_ERROR_NONE) result--;
+					if (result < 0){
+						printf("Sampling Error %i\n", result);
+					}
+					Mag_Mean_W_X = Mag_Mean_W_X + axes.xval;
+					Mag_Mean_W_Y = Mag_Mean_W_Y + axes.yval;
+					i++;
+					HAL_Delay(100);
+				}
+				Mag_Mean_W_X = Mag_Mean_W_X/(i - 1);
+				Mag_Mean_W_Y = Mag_Mean_W_Y/(i - 1);
+
+				printf("Magnetometer Means: X %i\t Y %i\n", Mag_Mean_W_X, Mag_Mean_W_Y);
+
+				Mag_Offset_X = (Mag_Mean_N_X + Mag_Mean_S_X + Mag_Mean_E_X + Mag_Mean_W_X)/4;
+				Mag_Offset_Y = (Mag_Mean_N_Y + Mag_Mean_S_Y + Mag_Mean_E_Y + Mag_Mean_W_Y)/4;
+
+				printf("Magnetometer Calibration for Z - Axis : Orient North and Upright and Press User Button\n");
+				User_Button_Wait();
+				i = 0;
+				while (i < 10)
+				{
+					Mag_Mean_N_Z_U = 0;
+					result = 0;
+					if (BSP_MOTION_SENSOR_GetAxes(1, MOTION_MAGNETO, &axes) != BSP_ERROR_NONE) result--;
+					if (result < 0){
+						printf("Sampling Error %i\n", result);
+					}
+					Mag_Mean_N_Z_U = Mag_Mean_N_Z_U + axes.zval;
+					i++;
+					HAL_Delay(100);
+				}
+
+				Mag_Mean_N_Z_U = Mag_Mean_N_Z_U/(i - 1);
+
+				printf("Magnetometer Z Mean Upright: %i\n", Mag_Mean_N_Z_U);
+
+				printf("Magnetometer Calibration for Z - Axis : Orient North and Downward and Press User Button\n");
+				User_Button_Wait();
+				i = 0;
+				while (i < 10)
+				{
+					Mag_Mean_N_Z_D = 0;
+					result = 0;
+					if (BSP_MOTION_SENSOR_GetAxes(1, MOTION_MAGNETO, &axes) != BSP_ERROR_NONE) result--;
+					if (result < 0){
+						printf("Sampling Error %i\n", result);
+					}
+					Mag_Mean_N_Z_D = Mag_Mean_N_Z_D + axes.zval;
+					i++;
+					HAL_Delay(100);
+				}
+
+				Mag_Mean_N_Z_D = Mag_Mean_N_Z_D/(i - 1);
+
+				printf("Magnetometer Z Mean Downward: %i\n", Mag_Mean_N_Z_D);
+
+
+				Mag_Offset_Z = (Mag_Mean_N_Z_U + Mag_Mean_N_Z_D)/2;
+
+				printf("Magnetometer Offsets: X %i\t Y %i\t Z %i\n", Mag_Offset_X, Mag_Offset_Y, Mag_Offset_Z);
+
+			}
+
+			if (ENABLE_MAGNETOMETER_OFFSET_MEASUREMENT == 0){
+				Mag_Offset_X = MAG_OFFSET_X;
+				Mag_Offset_Y = MAG_OFFSET_Y;
+				Mag_Offset_Z = MAG_OFFSET_Z;
+				printf("Magnetometer Offset Calibration Not Performed - Relying on Stored Values\n");
+				printf("Magnetometer Stored Offsets: X %i\t Y %i\t Z %i\n", Mag_Offset_X, Mag_Offset_Y, Mag_Offset_Z);
+			}
+
+
+			UserButtonPressed = RESET;
+
+			while (UserButtonPressed == 0){
+				i = 0;
+				while (i < 10)
+				{
+					Mag_Mean_X = 0;
+					Mag_Mean_Y = 0;
+					Mag_Mean_Z = 0;
+					result = 0;
+					if (BSP_MOTION_SENSOR_GetAxes(1, MOTION_MAGNETO, &axes) != BSP_ERROR_NONE) result--;
+					if (result < 0){
+						printf("Sampling Error %i\n", result);
+					}
+					Mag_Mean_X = Mag_Mean_X + axes.xval;
+					Mag_Mean_Y = Mag_Mean_Y + axes.yval;
+					Mag_Mean_Z = Mag_Mean_Z + axes.zval;
+					i++;
+					HAL_Delay(25);
+				}
+				Mag_Mean_X = Mag_Mean_X/(i - 1);
+				Mag_Mean_Y = Mag_Mean_Y/(i - 1);
+				Mag_Mean_Z = Mag_Mean_Z/(i - 1);
+
+				printf("Magnetometer Means: X %i\t Y %i\t Z %i\n", Mag_Mean_X, Mag_Mean_Y, Mag_Mean_Z);
+				printf("Magnetometer Means - Offsets: X %i\t Y %i\n", Mag_Mean_X - Mag_Offset_X, Mag_Mean_Y - Mag_Offset_Y);
+
+				Mag_Mean_X = Mag_Mean_X - Mag_Offset_X;
+				Mag_Mean_Y = Mag_Mean_Y - Mag_Offset_Y;
+				Mag_Mean_Z = Mag_Mean_Z - Mag_Offset_Z;
+
+				Heading = (57.298)*atan2(-(float)(Mag_Mean_Y), (float)(Mag_Mean_X));
+
+				if (Heading < 0.0){
+					Heading = Heading + 360.0;
+				}
+				printf("Compass Heading: %3.1f\n", Heading);
+
+				/* Compute normalized acceleration values for application only to upright Node */
+
+				if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+				if (result < 0){
+					printf("Sampling Error %i\n", result);
+				}
+
+				Acc_Z = (float)axes.zval;
+
+				if (Acc_Z > 0 ){
+					Acc_X = (float)axes.xval;
+					Acc_Y = (float)axes.yval;
+				}
+
+				if (Acc_Z < 0 ){
+					Acc_X = -(float)axes.xval;
+					Acc_Y = -(float)axes.yval;
+				}
+
+				Acc_X_Norm = Acc_X/sqrt(Acc_X*Acc_X + Acc_Y*Acc_Y + Acc_Z*Acc_Z);
+				Acc_Y_Norm = Acc_Y/sqrt(Acc_X*Acc_X + Acc_Y*Acc_Y + Acc_Z*Acc_Z);
+
+				printf("Acceleration X = %3.3f, Y = %3.3f, Z = %3.3f\n", Acc_X, Acc_Y, Acc_Z);
+				printf("Normalized Acceleration X = %3.3f, Y = %3.3f\n", Acc_X_Norm, Acc_Y_Norm);
+
+				Pitch = -asin(Acc_X_Norm);
+				Roll = -asin(Acc_Y_Norm/cos(Pitch));
+				printf("Pitch %3.3f Roll %3.3f\n", Pitch, Roll);
+
+				Mag_Tilt_Corrected_X = Mag_Mean_X*cos(Pitch) + Mag_Mean_Z*sin(Pitch);
+				Mag_Tilt_Corrected_Y = Mag_Mean_X*sin(Roll)*sin(Pitch) + Mag_Mean_Y*cos(Roll) - Mag_Mean_Z*sin(Roll)*cos(Pitch);
+
+				/* Note difference in orientation between Accelerometer and Magnetometer Axes */
+				/* Assign Magnetometer axes accordingly */
+
+				if (Acc_Z > 0){
+					Heading = (57.298)*atan2(-(float)(Mag_Tilt_Corrected_Y), (float)(Mag_Tilt_Corrected_X));
+				}
+
+				/* Note difference in orientation between Accelerometer and Magnetometer Axes */
+				/* Assign Magnetometer axes accordingly for inverted orientation */
+
+				if (Acc_Z < 0){
+					Heading = (57.298)*atan2((float)(Mag_Tilt_Corrected_Y), (float)(Mag_Tilt_Corrected_X));
+				}
+
+				printf("Magnetometer Means Tilt Corrected: X %3.3f\t Y %3.3f\n",  Mag_Tilt_Corrected_X,  Mag_Tilt_Corrected_Y);
+				Heading = (57.298)*atan2(-(float)(Mag_Tilt_Corrected_Y), (float)(Mag_Tilt_Corrected_X));
+
+				if (Heading < 0.0){
+					Heading = Heading + 360.0;
+				}
+				printf("Compass Heading Tilt Corrected: %3.1f\n", Heading);
+				break;
+			}
+			break;
+		} /* Magnetometer Measurement and Offset Computation */
+
+		printf("\nMagnetometer Measurement Complete\n");
+
+		printf("\n\nStart Compass Heading Display with User Button Click and User Button to Stop\n");
+		User_Button_Wait();
+		initialize_state = 0;
+		while (UserButtonPressed == 0)
+		{
+			i = 0;
+			/* Compute mean magnetometer outputs over 0.25 second interval */
+			while (i < 10)
+			{
+				Mag_Mean_X = 0;
+				Mag_Mean_Y = 0;
+				Mag_Mean_Z = 0;
+				result = 0;
+				if (BSP_MOTION_SENSOR_GetAxes(1, MOTION_MAGNETO, &axes) != BSP_ERROR_NONE) result--;
+				if (result < 0){
+					printf("Sampling Error %i\n", result);
+				}
+				Mag_Mean_X = Mag_Mean_X + axes.xval;
+				Mag_Mean_Y = Mag_Mean_Y + axes.yval;
+				Mag_Mean_Z = Mag_Mean_Z + axes.zval;
+				i++;
+				HAL_Delay(25);
+			}
+			Mag_Mean_X = Mag_Mean_X/(i - 1);
+			Mag_Mean_Y = Mag_Mean_Y/(i - 1);
+			Mag_Mean_Z = Mag_Mean_Z/(i - 1);
+
+			Mag_Mean_X = Mag_Mean_X - Mag_Offset_X;
+			Mag_Mean_Y = Mag_Mean_Y - Mag_Offset_Y;
+			Mag_Mean_Z = Mag_Mean_Z - Mag_Offset_Z;
+
+			Heading_Without_Tilt_Correction = (57.298)*atan2(-(float)(Mag_Mean_Y), (float)(Mag_Mean_X));
+
+			if (Heading_Without_Tilt_Correction < 0.0){
+				Heading_Without_Tilt_Correction = Heading + 360.0;
+			}
+
+			/* Measure and compute normalized acceleration values for application only to upright Node */
+
+			if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+			if (result < 0){
+				printf("Sampling Error %i\n", result);
+			}
+
+			Acc_Z = (float)axes.zval;
+
+			if (Acc_Z > 0 ){
+				Acc_X = (float)axes.xval;
+				Acc_Y = (float)axes.yval;
+			}
+
+			if (Acc_Z < 0 ){
+				Acc_X = -(float)axes.xval;
+				Acc_Y = -(float)axes.yval;
+			}
+
+			Acc_X_Norm = Acc_X/sqrt(Acc_X*Acc_X + Acc_Y*Acc_Y + Acc_Z*Acc_Z);
+			Acc_Y_Norm = Acc_Y/sqrt(Acc_X*Acc_X + Acc_Y*Acc_Y + Acc_Z*Acc_Z);
+
+			Pitch = -asin(Acc_X_Norm);
+
+			Roll_Argument = Acc_Y_Norm/cos(Pitch);
+			if (Roll_Argument > 1.0){
+				Roll_Argument = 1.0;
+			}
+			if (Roll_Argument < -1.0){
+				Roll_Argument = -1.0;
+			}
+
+			Roll = -asin(Roll_Argument);
+
+			/* Note difference in orientation between Accelerometer and Magnetometer Axes */
+			/* Assign Magnetometer axes accordingly */
+
+			Mag_Tilt_Corrected_X = Mag_Mean_X*cos(Pitch) + Mag_Mean_Z*sin(Pitch);
+			Mag_Tilt_Corrected_Y = Mag_Mean_X*sin(Roll)*sin(Pitch) + Mag_Mean_Y*cos(Roll) - Mag_Mean_Z*sin(Roll)*cos(Pitch);
+
+			if (Acc_Z > 0){
+				Heading = (57.298)*atan2(-(float)(Mag_Tilt_Corrected_Y), (float)(Mag_Tilt_Corrected_X));
+			}
+
+			/* Note difference in orientation between Accelerometer and Magnetometer Axes */
+			/* Assign Magnetometer axes accordingly for inverted orientation */
+
+			if (Acc_Z < 0){
+				Heading = (57.298)*atan2((float)(Mag_Tilt_Corrected_Y), (float)(Mag_Tilt_Corrected_X));
+			}
+
+			if (Heading < 0.0){
+				Heading = Heading + 360.0;
+			}
+			if (ENABLE_PLOT_PRINT_MAG == 0){
+				printf("Compass Heading Tilt Corrected: %3.1f\n", Heading);
+			}
+			if (ENABLE_PLOT_PRINT_MAG == 1){
+				if (initialize_state == 0){
+					plot_time_series_header("0 degrees", "360 degrees");
+					initialize_state = 1;
+				}
+				plot_dual_time_series_compass((int)(Heading), (int)(Heading_Without_Tilt_Correction), "O", "X");
+				//plot_dual_time_series_compass((int)(Heading), (int)180, "H", "|");
+				//plot_time_series_compass((int)(Heading), "O");
+			}
+		} /* Compass Heading Display */
+
+
+
+		printf("Start Accelerometer Inertial Sensing Test with User Button Click\n");
+
+
+		HP_Filter_Enable = HP_FILTER_ENABLE;
+		LP_Filter_Enable = LP_FILTER_ENABLE;
+
+		/*
+		 * Define sample period
+		 */
+		sample_period = (float)(DATA_PERIOD_INERTIAL)/1000.0;
+
+		/*
+		 * Compute high pass filter coefficients
+		 */
+
+		W_HP = 2 * 3.1416 * HIGH_PASS_FILTER_FREQUENCY;
+		I_HP = 2/(W_HP * sample_period);
+		if (HP_Filter_Enable == 1){
+			iir_HP_0 = 1 - (1/(1 + I_HP));
+			iir_HP_1 = -iir_HP_0;
+			iir_HP_2 = (1/(1 + I_HP))*(1 - I_HP);
+		}
+		if (HP_Filter_Enable == 0){
+			iir_HP_0 = 1;
+			iir_HP_1 = 0;
+			iir_HP_2 = 0;
+		}
+
+		/*
+		 * Compute low pass filter coefficients
+		 */
+
+		W_LP = 2 * 3.1416 * LOW_PASS_FILTER_FREQUENCY;
+		I_LP = 2/(W_LP * sample_period);
+		if (LP_Filter_Enable == 1){
+			iir_LP_0 = 1/(1 + I_LP);
+			iir_LP_1 = iir_LP_0;
+			iir_LP_2 = (1/(1 + I_LP))*(1 - I_LP);
+		}
+		if (LP_Filter_Enable == 0){
+			iir_LP_0 = 1;
+			iir_LP_1 = 0;
+			iir_LP_2 = 0;
+		}
+
+
+
+		Ms_Accel_Init();
+
+		printf("Low Pass Filter Corner Frequency = %3.1f (Hz) \n", LOW_PASS_FILTER_FREQUENCY);
+		printf("High Pass Filter Corner Frequency = %3.1f (Hz) \n", HIGH_PASS_FILTER_FREQUENCY);
+
+		printf("Place IoT Node at Rest on Table and Maintain Motionless\n");
+		printf("Start Accelerometer Offset Correction with User Button Click\n");
+		User_Button_Wait();
+		HAL_Delay(1000);
+
+		printf("1 Second Sensor Offset Measurement Starting\n");
+
+		msTickPrev = HAL_GetTick();
+
+		X_Offset = 0;
+		Y_Offset = 0;
+		Z_Offset = 0;
+
+		j = 0;
+
+		while ((HAL_GetTick() - msTickPrev) < 1000){
+			HAL_Delay(100);
+			j = j + 1;
+			result = 0;
+			if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+			if (result < 0){
+				printf("Sampling Error %i\n", result);
+			}
+			X_Offset = X_Offset + axes.xval;
+			Y_Offset = Y_Offset + axes.yval;
+			Z_Offset = Z_Offset + axes.zval;
+		}
+		X_Offset = X_Offset/j;
+		Y_Offset = Y_Offset/j;
+		Z_Offset = Z_Offset/j;
+
+		printf("Offset Measurement Complete\n");
+		printf("Offset Values (milli-g): X %i\tY %i\tZ %i\n", X_Offset, Y_Offset, Z_Offset);
+		printf("Sample Period = %0.5f\n", sample_period);
+
+		k = 0;
+		initialize_state = 0;
+		calibration_count = 0;
+		mean_time_diff = 0;
+
+		printf("Start Displacement Measurement with User Button Click\n");
+		User_Button_Wait();
+
+		start_time = HAL_GetTick();
+
+		while (UserButtonPressed == 0) {
+
+			/* Get sysTick value and check if it's time to execute the task */
+
+			msTick = HAL_GetTick();
+
+			if(msTick % DATA_PERIOD_INERTIAL == 0 && msTickPrev != msTick)
+			{
+				msTickPrev = msTick;
+
+
+				if (k == 0){
+
+					plot_time_series_header("-1 g | -2 m", "1 g | 2 m");
+					/*
+					 * Initialize displacement and filter values
+					 */
+
+					acc_x = 0;
+					acc_y = 0;
+					acc_x_prev = 0;
+					acc_y_prev = 0;
+					acc_x_filter_lp_prev = 0;
+					acc_y_filter_lp_prev = 0;
+					acc_x_filter_hp_prev = 0;
+					acc_y_filter_hp_prev = 0;
+
+					disp_x = 0;
+					vel_x = 0;
+					vel_x_prev = 0;
+					disp_y = 0;
+					vel_y = 0;
+					vel_y_prev = 0;
+
+					disp_x_prev = 0;
+					disp_y_prev = 0;
+					disp_x_filter_prev = 0;
+					disp_y_filter_prev = 0;
+
+					mean_time_diff = 0;
+
+				}
+
+
+				if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+				if (result < 0){
+					printf("Sampling Error %i\n", result);
+				}
+
+				/*
+				 * Compute displacement and velocity by integration
+				 */
+
+				/* Initial Setting for integration interval prior to calibration*/
+
+				if (calibration_count < 2){
+					integration_interval = INTEGRATION_INTERVAL;
+				}
+
+				/* Convert acceleration to millimeter/sec/sec using 1 milli-g = (9.81 m/s/s)/1000 */
+
+				acc_x = 9.81*(float)(axes.xval - X_Offset);
+				acc_y = 9.81*(float)(axes.yval - Y_Offset);
+
+				/* Apply Low Pass filter to acceleration */
+				acc_x_filter_lp  = iir_LP_0 * acc_x + iir_LP_1 * acc_x_prev - iir_LP_2 * acc_x_filter_lp_prev;
+				acc_y_filter_lp  = iir_LP_0 * acc_y + iir_LP_1 * acc_y_prev - iir_LP_2 * acc_y_filter_lp_prev;
+
+				/* Apply High Pass filter to signal of Low Pass filter to acceleration */
+				acc_x_filter_hp = iir_HP_0 * acc_x_filter_lp  + iir_HP_1 * acc_x_filter_lp_prev - iir_HP_2 * acc_x_filter_hp_prev;
+				acc_y_filter_hp = iir_HP_0 * acc_y_filter_lp  + iir_HP_1 * acc_y_filter_lp_prev - iir_HP_2 * acc_y_filter_hp_prev;
+
+				acc_x_prev = acc_x;
+				acc_y_prev = acc_y;
+
+				period_stop = HAL_GetTick();
+				time_diff = (float)(period_stop - period_start)/1000.0;
+				period_start = period_stop;
+				vel_x = vel_x + (acc_x_filter_hp + acc_x_filter_hp_prev) * integration_interval/2;
+				vel_y = vel_y + (acc_y_filter_hp + acc_y_filter_hp_prev) * integration_interval/2;
+
+				acc_x_filter_lp_prev = acc_x_filter_lp;
+				acc_y_filter_lp_prev = acc_y_filter_lp;
+
+				acc_x_filter_hp_prev = acc_x_filter_hp;
+				acc_y_filter_hp_prev = acc_y_filter_hp;
+
+				/* Integrate velocity to compute displacement */
+
+				disp_x = disp_x + (vel_x + vel_x_prev) * integration_interval/2;
+				disp_y = disp_y + (vel_y + vel_y_prev) * integration_interval/2;
+
+				vel_x_prev = vel_x;
+				vel_y_prev = vel_y;
+
+				disp_x_filter = iir_HP_0 * disp_x + iir_HP_1 * disp_x_prev - iir_HP_2 * disp_x_filter_prev;
+				disp_y_filter = iir_HP_0 * disp_y + iir_HP_1 * disp_y_prev - iir_HP_2 * disp_y_filter_prev;
+
+				disp_x_prev = disp_x;
+				disp_y_prev = disp_y;
+				disp_x_filter_prev = disp_x_filter;
+				disp_y_filter_prev = disp_y_filter;
+
+				if (k % 40 == 0 && initialize_state == 1){
+					if (ENABLE_PLOT_PRINT_ACCEL == 0){
+						printf("%0.4f\t%0.4f\t%i\t%i\t%i\n", k, (float)(HAL_GetTick() - start_time)/1000.0, time_diff, (int)acc_x_filter_hp, (int)vel_x, (int)disp_x);
+					}
+					if (ENABLE_PLOT_PRINT_ACCEL == 1){
+						plot_single_time_series((int)disp_x_filter*20/100, "X");
+					}
+				}
+
+				k++;
+
+				if (k > 0){
+					mean_time_diff = mean_time_diff + time_diff;
+					time_diff_count++;
+				}
+
+				if (k > N_SAMPLES || (k > 0 && initialize_state == 0)){
+					mean_time_diff = mean_time_diff/(float)time_diff_count;
+					if (calibration_count > 2){
+						//printf("Mean Time Diff = %0.2f (msec)\n", 1000*mean_time_diff);
+						printf("Integration Interval = %0.2f (msec)\n", 1000*integration_interval);
+					}
+					initialize_state = 1;
+					k = 0;
+					if (calibration_count >= 2){
+						integration_interval = mean_time_diff;
+					}
+					calibration_count++;
+					mean_time_diff = 0;
+					time_diff_count = 0;
+				}
+
+			}
+		} /* Accelerometer Inertial Sensing */
+
+
+
+		printf("Start Rate Gyroscope Orientation Sensing Test with User Button Click\n");
+
+
+		HP_Filter_Gyro_Enable = HP_FILTER_GYRO_ENABLE;
+		LP_Filter_Gyro_Enable = LP_FILTER_GYRO_ENABLE;
+
+		/*
+		 * Define sample period
+		 */
+		sample_period = (float)(DATA_PERIOD_INERTIAL)/1000.0;
+
+		/*
+		 * Compute high pass filter coefficients
+		 */
+
+		W_HP_GYRO = 2 * 3.1416 * HIGH_PASS_FILTER_GYRO_FREQUENCY;
+		I_HP_GYRO = 2/(W_HP_GYRO * sample_period);
+		if (HP_Filter_Gyro_Enable == 1){
+			iir_HP_Gyro_0 = 1 - (1/(1 + I_HP_GYRO));
+			iir_HP_Gyro_1 = -iir_HP_Gyro_0;
+			iir_HP_Gyro_2 = (1/(1 + I_HP_GYRO))*(1 - I_HP_GYRO);
+		}
+		if (HP_Filter_Gyro_Enable == 0){
+			iir_HP_Gyro_0 = 1;
+			iir_HP_Gyro_1 = 0;
+			iir_HP_Gyro_2 = 0;
+		}
+
+		/*
+		 * Compute low pass filter coefficients
+		 */
+
+		W_LP_GYRO = 2 * 3.1416 * LOW_PASS_FILTER_GYRO_FREQUENCY;
+		I_LP_GYRO = 2/(W_LP_GYRO * sample_period);
+		if (LP_Filter_Gyro_Enable == 1){
+			iir_LP_Gyro_0 = 1/(1 + I_LP_GYRO);
+			iir_LP_Gyro_1 = iir_LP_Gyro_0;
+			iir_LP_Gyro_2 = (1/(1 + I_LP_GYRO))*(1 - I_LP_GYRO);
+		}
+		if (LP_Filter_Gyro_Enable == 0){
+			iir_LP_Gyro_0 = 1;
+			iir_LP_Gyro_1 = 0;
+			iir_LP_Gyro_2 = 0;
+		}
+
+
+
+		Ms_Gyro_Init();
+
+		printf("Low Pass Filter Corner Frequency = %3.1f (Hz) \n", LOW_PASS_FILTER_GYRO_FREQUENCY);
+		printf("High Pass Filter Corner Frequency = %3.1f (Hz) \n", HIGH_PASS_FILTER_GYRO_FREQUENCY);
+
+		printf("Place IoT Node at Rest on Table and Maintain Motionless\n");
+		printf("Start Gyroscope Offset Correction with User Button Click\n");
+		User_Button_Wait();
+		HAL_Delay(1000);
+
+		printf("1 Second Sensor Offset Measurement Starting\n");
+
+		msTickPrev = HAL_GetTick();
+
+		X_Offset = 0;
+		Y_Offset = 0;
+		Z_Offset = 0;
+
+		j = 0;
+
+		while ((HAL_GetTick() - msTickPrev) < 1000){
+			HAL_Delay(100);
+			j = j + 1;
+			result = 0;
+			if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_GYRO, &axes) != BSP_ERROR_NONE) result--;
+			if (result < 0){
+				printf("Sampling Error %i\n", result);
+			}
+			X_Offset = X_Offset + axes.xval;
+			Y_Offset = Y_Offset + axes.yval;
+			Z_Offset = Z_Offset + axes.zval;
+		}
+		X_Offset = X_Offset/j;
+		Y_Offset = Y_Offset/j;
+		Z_Offset = Z_Offset/j;
+
+		printf("Offset Measurement Complete\n");
+		printf("Offset Values (milli-g): X %i\tY %i\tZ %i\n", X_Offset, Y_Offset, Z_Offset);
+		printf("Sample Period = %0.5f\n", sample_period);
+
+		k = 0;
+		initialize_state = 0;
+		calibration_count = 0;
+		mean_time_diff = 0;
+
+		printf("Start Rotation Measurement with User Button Click\n");
+		User_Button_Wait();
+
+		start_time = HAL_GetTick();
+
+
+		while (UserButtonPressed == 0) {
+
+			/* Get sysTick value and check if it's time to execute the task */
+
+			msTick = HAL_GetTick();
+
+			if(msTick % DATA_PERIOD_GYRO == 0 && msTickPrev != msTick)
+			{
+				msTickPrev = msTick;
+
+
+				if (k == 0){
+
+					plot_time_series_header("-180", "180");
+
+					/*
+					 * Initialize displacement and filter values
+					 */
+
+
+					gyro_rate_x = 0;
+					gyro_rate_y = 0;
+					gyro_rate_x_prev = 0;
+					gyro_rate_y_prev = 0;
+					gyro_rate_x_filter_lp_prev = 0;
+					gyro_rate_y_filter_lp_prev = 0;
+					gyro_rate_x_filter_hp_prev = 0;
+					gyro_rate_y_filter_hp_prev = 0;
+
+					angle_x = 0;
+					angle_y = 0;
+
+					angle_x_prev = 0;
+					angle_y_prev = 0;
+					angle_x_filter_prev = 0;
+					angle_y_filter_prev = 0;
+
+				}
+
+				if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_GYRO, &axes) != BSP_ERROR_NONE) result--;
+				if (result < 0){
+					printf("Sampling Error %i\n", result);
+				}
+
+				/*
+				 * Compute angle by integration
+				 */
+
+				if (calibration_count < 2){
+					integration_interval = INTEGRATION_INTERVAL;
+				}
+
+				gyro_rate_x = (float)(axes.xval - X_Offset);
+				gyro_rate_y = (float)(axes.yval - Y_Offset);
+
+				/* Apply Low Pass filter to gyro rotation rate */
+				gyro_rate_x_filter_lp  = iir_LP_Gyro_0 * gyro_rate_x + iir_LP_Gyro_1 * gyro_rate_x_prev - iir_LP_Gyro_2 * gyro_rate_x_filter_lp_prev;
+				gyro_rate_y_filter_lp  = iir_LP_Gyro_0 * gyro_rate_y + iir_LP_Gyro_1 * gyro_rate_y_prev - iir_LP_Gyro_2 * gyro_rate_y_filter_lp_prev;
+
+				/* Apply High Pass filter to signal of Low Pass filter to gyro_rate */
+				gyro_rate_x_filter_hp = iir_HP_Gyro_0 * gyro_rate_x_filter_lp  + iir_HP_Gyro_1 * gyro_rate_x_filter_lp_prev - iir_HP_Gyro_2 * gyro_rate_x_filter_hp_prev;
+				gyro_rate_y_filter_hp = iir_HP_Gyro_0 * gyro_rate_y_filter_lp  + iir_HP_Gyro_1 * gyro_rate_y_filter_lp_prev - iir_HP_Gyro_2 * gyro_rate_y_filter_hp_prev;
+
+				if (k > 0){
+					period_stop = HAL_GetTick();
+					time_diff = (float)(period_stop - period_start)/1000.0;
+					period_start = period_stop;
+				}
+
+				angle_x = angle_x + (gyro_rate_x_filter_hp + gyro_rate_x_filter_hp_prev) * integration_interval/2;
+				angle_y = angle_y + (gyro_rate_y_filter_hp + gyro_rate_y_filter_hp_prev) * integration_interval/2;
+
+				gyro_rate_x_prev = gyro_rate_x;
+				gyro_rate_y_prev = gyro_rate_y;
+
+				gyro_rate_x_filter_lp_prev = gyro_rate_x_filter_lp;
+				gyro_rate_y_filter_lp_prev = gyro_rate_y_filter_lp;
+
+				gyro_rate_x_filter_hp_prev = gyro_rate_x_filter_hp;
+				gyro_rate_y_filter_hp_prev = gyro_rate_y_filter_hp;
+
+				/* Apply HP filter to angle  */
+
+				angle_x_filter = iir_HP_Gyro_0 * angle_x + iir_HP_Gyro_1 * angle_x_prev - iir_HP_Gyro_2 * angle_x_filter_prev;
+				angle_y_filter = iir_HP_Gyro_0 * angle_y + iir_HP_Gyro_1 * angle_y_prev - iir_HP_Gyro_2 * angle_y_filter_prev;
+
+				angle_x_prev = angle_x;
+				angle_y_prev = angle_y;
+
+				angle_x_filter_prev = angle_x_filter;
+				angle_y_filter_prev = angle_y_filter;
+
+
+
+				if (k % 100 == 0 && initialize_state == 1){
+					if (ENABLE_PLOT_PRINT_GYRO == 0){
+						printf("%i\n",(int)angle_x_filter/1000);
+					}
+					if (ENABLE_PLOT_PRINT_GYRO == 1){
+						plot_single_time_series((int)(angle_x_filter/1000)*40/180, "X");
+					}
+				}
+
+				k++;
+
+				if (k > 0){
+					mean_time_diff = mean_time_diff + time_diff;
+					time_diff_count++;
+				}
+
+				if (k > N_SAMPLES || (k > 0 && initialize_state == 0)){
+					mean_time_diff = mean_time_diff/(float)time_diff_count;
+					if (calibration_count > 2){
+						//printf("Mean Time Diff = %0.2f (msec)\n", 1000*mean_time_diff);
+						printf("Integration Interval = %0.2f (msec)\n", 1000*integration_interval);
+					}
+					initialize_state = 1;
+					k = 0;
+					if (calibration_count >= 2){
+						integration_interval = mean_time_diff;
+					}
+					calibration_count++;
+					mean_time_diff = 0;
+					time_diff_count = 0;
+				}
+
+			}
+		} /* Rate Gyroscope Angle Display */
+
+
+	}  /* Enable System Test Loop */
+
+
+		if(ENABLE_EMBEDDED_ML_SINGLE_STATE_ORIENTATION_CLASSIFICATION == 1){
+
+
+			printf("\n\nEmbeddedML Single State Orientation Classification\n\n");
+
+			Ms_Init();
+
+			result = 0;
+			if (BSP_MOTION_SENSOR_SetFullScale(0, MOTION_ACCELERO, 2) != BSP_ERROR_NONE) result--;
+			if (BSP_MOTION_SENSOR_GetFullScale(0, MOTION_ACCELERO, &fullScale) != BSP_ERROR_NONE) result--;
+			if (fullScale != 2) result--;
+
+			/* GetOutputDataRate and SetOutputDataRate functions */
+			result = 0;
+			if (BSP_MOTION_SENSOR_SetOutputDataRate(0, MOTION_ACCELERO, 3333.0f) != BSP_ERROR_NONE) result--;
+			if (BSP_MOTION_SENSOR_GetOutputDataRate(0, MOTION_ACCELERO, &outputDataRate) != BSP_ERROR_NONE) result--;
+			if (outputDataRate != 3333.0f) result--;
+
+			result = 0;
+			if (BSP_MOTION_SENSOR_SetOutputDataRate(0, MOTION_ACCELERO, 833.0f) != BSP_ERROR_NONE) result--;
+			if (BSP_MOTION_SENSOR_GetOutputDataRate(0, MOTION_ACCELERO, &outputDataRate) != BSP_ERROR_NONE) result--;
+			if (outputDataRate != 833.0f) result--;
+
+			result = 0;
+			if (BSP_MOTION_SENSOR_GetSensitivity(0, MOTION_ACCELERO, &sensitivity) != BSP_ERROR_NONE) result--;
+			if (result < 0){
+				printf("Sensitivity Error %i\n", result);
+			}
+			printf("Accelerometer Full Scale Range = %i (milli-g)\n", fullScale*1000);
+			printf("Accelerometer Data Rate %0.1f (Hz), Sensitivity (milli-g) %0.1f\n\n", outputDataRate, sensitivity);
+			result = 0;
+
+			/* Initialize the Red LED */
+			if (BSP_LED_Init(LED6) != BSP_ERROR_NONE) result--;
+			/* Initialize the Green LED */
+			if (BSP_LED_Init(LED7) != BSP_ERROR_NONE) result--;
+
+
+
+			float weights_initial_ss[81] = { 0.680700, 0.324900, 0.607300, 0.365800, 0.693000,
+					0.527200, 0.754400, 0.287800, 0.592300, 0.570900, 0.644000,
+					0.416500, 0.249200, 0.704200, 0.598700, 0.250300, 0.632700,
+					0.372900, 0.684000, 0.661200, 0.230300, 0.516900, 0.770900,
+					0.315700, 0.756000, 0.293300, 0.509900, 0.627800, 0.781600,
+					0.733500, 0.509700, 0.382600, 0.551200, 0.326700, 0.781000,
+					0.563300, 0.297900, 0.714900, 0.257900, 0.682100, 0.596700,
+					0.467200, 0.339300, 0.533600, 0.548500, 0.374500, 0.722800,
+					0.209100, 0.619400, 0.635700, 0.300100, 0.715300, 0.670800,
+					0.794400, 0.766800, 0.349000, 0.412400, 0.619600, 0.353000,
+					0.690300, 0.772200, 0.666600, 0.254900, 0.402400, 0.780100,
+					0.285300, 0.697700, 0.540800, 0.222800, 0.693300, 0.229800,
+					0.698100, 0.463500, 0.201300, 0.786500, 0.581400, 0.706300,
+					0.653600, 0.542500, 0.766900, 0.411500 };
+			float dedw_ss[81];
+			float bias_ss[15];
+			unsigned int network_topology_ss[3] = { 3, 9, 6 };
+			float output_ss[6];
+
+			for (i = 0; i < 15; i++){
+				bias_ss[i] = 0.5;
+			}
+			for (i = 0; i < 6; i++){
+				output_ss[i] = 0.0;
+			}
+			for (i = 0; i < 81; i++){
+				dedw_ss[i] = 0.0;
+			}
+
+			ANN net_ss;
+			net_ss.weights = weights_initial_ss;
+			net_ss.dedw = dedw_ss;
+			net_ss.bias = bias_ss;
+			net_ss.topology = network_topology_ss;
+			net_ss.n_layers = 3;
+			net_ss.n_weights = 81;
+			net_ss.n_bias = 15;
+			net_ss.output = output_ss;
+
+
+
+
+			net_ss.eta = 0.13;     //Learning Rate
+			net_ss.beta = 0.01;    //Bias Learning Rate
+			net_ss.alpha = 0.25;   //Momentum Coefficient
+			net_ss.output_activation_function = &relu2;
+			net_ss.hidden_activation_function = &relu2;
+
+			init_ann(&net_ss);
+
+
+			hasTrained = 0;
+
+			int loc = -1;
+			while (1) {
+				/* Get sysTick value and check if it's time to execute the task */
+				msTick = HAL_GetTick();
+				if (msTick % DATA_PERIOD_MS == 0 && msTickPrev != msTick) {
+					msTickPrev = msTick;
+					if (hasTrained){
+						loc = Test_ANN(&net_ss, loc);
+					}
+				}
+
+				if (!hasTrained) {
+					printf("Press User Button to Start Training\n");
+					User_Button_Wait();
+					TrainOrientation(&net_ss);
+					hasTrained = 1;
+				}
+			}
+		}
+
+
+
+
+		if(ENABLE_EMBEDDED_ML_STATE_MACHINE_MOTION_CLASSIFICATION == 1){
+
+
+			printf("\n\nEmbeddedML State Machine Feature Extraction and Classification\n\n");
+
+			Ms_Init();
+
+			result = 0;
+			if (BSP_MOTION_SENSOR_SetFullScale(0, MOTION_ACCELERO, 2) != BSP_ERROR_NONE) result--;
+			if (BSP_MOTION_SENSOR_GetFullScale(0, MOTION_ACCELERO, &fullScale) != BSP_ERROR_NONE) result--;
+			if (fullScale != 2) result--;
+
+			/* GetOutputDataRate and SetOutputDataRate functions */
+			result = 0;
+			if (BSP_MOTION_SENSOR_SetOutputDataRate(0, MOTION_ACCELERO, 3333.0f) != BSP_ERROR_NONE) result--;
+			if (BSP_MOTION_SENSOR_GetOutputDataRate(0, MOTION_ACCELERO, &outputDataRate) != BSP_ERROR_NONE) result--;
+			if (outputDataRate != 3333.0f) result--;
+
+			result = 0;
+			if (BSP_MOTION_SENSOR_SetOutputDataRate(0, MOTION_ACCELERO, 833.0f) != BSP_ERROR_NONE) result--;
+			if (BSP_MOTION_SENSOR_GetOutputDataRate(0, MOTION_ACCELERO, &outputDataRate) != BSP_ERROR_NONE) result--;
+			if (outputDataRate != 833.0f) result--;
+
+			result = 0;
+			if (BSP_MOTION_SENSOR_GetSensitivity(0, MOTION_ACCELERO, &sensitivity) != BSP_ERROR_NONE) result--;
+			if (result < 0){
+				printf("Sensitivity Error %i\n", result);
+			}
+			printf("Accelerometer Full Scale Range = %i (milli-g)\n", fullScale*1000);
+			printf("Accelerometer Data Rate %0.1f (Hz), Sensitivity (milli-g) %0.1f\n\n", outputDataRate, sensitivity);
+			result = 0;
+
+			/* Initialize the Red LED */
+			if (BSP_LED_Init(LED6) != BSP_ERROR_NONE) result--;
+			/* Initialize the Green LED */
+			if (BSP_LED_Init(LED7) != BSP_ERROR_NONE) result--;
+
+
+
+			float weights_initial_ss[81] = { 0.680700, 0.324900, 0.607300, 0.365800, 0.693000,
+					0.527200, 0.754400, 0.287800, 0.592300, 0.570900, 0.644000,
+					0.416500, 0.249200, 0.704200, 0.598700, 0.250300, 0.632700,
+					0.372900, 0.684000, 0.661200, 0.230300, 0.516900, 0.770900,
+					0.315700, 0.756000, 0.293300, 0.509900, 0.627800, 0.781600,
+					0.733500, 0.509700, 0.382600, 0.551200, 0.326700, 0.781000,
+					0.563300, 0.297900, 0.714900, 0.257900, 0.682100, 0.596700,
+					0.467200, 0.339300, 0.533600, 0.548500, 0.374500, 0.722800,
+					0.209100, 0.619400, 0.635700, 0.300100, 0.715300, 0.670800,
+					0.794400, 0.766800, 0.349000, 0.412400, 0.619600, 0.353000,
+					0.690300, 0.772200, 0.666600, 0.254900, 0.402400, 0.780100,
+					0.285300, 0.697700, 0.540800, 0.222800, 0.693300, 0.229800,
+					0.698100, 0.463500, 0.201300, 0.786500, 0.581400, 0.706300,
+					0.653600, 0.542500, 0.766900, 0.411500 };
+			float dedw_ss[81];
+			float bias_ss[15];
+			unsigned int network_topology_ss[3] = { 3, 9, 6 };
+			float output_ss[6];
+
+			for (i = 0; i < 15; i++){
+				bias_ss[i] = 0.5;
+			}
+			for (i = 0; i < 6; i++){
+				output_ss[i] = 0.0;
+			}
+			for (i = 0; i < 81; i++){
+				dedw_ss[i] = 0.0;
+			}
+
+			ANN net_ss;
+			net_ss.weights = weights_initial_ss;
+			net_ss.dedw = dedw_ss;
+			net_ss.bias = bias_ss;
+			net_ss.topology = network_topology_ss;
+			net_ss.n_layers = 3;
+			net_ss.n_weights = 81;
+			net_ss.n_bias = 15;
+			net_ss.output = output_ss;
+
+
+
+
+			net_ss.eta = 0.13;     //Learning Rate
+			net_ss.beta = 0.01;    //Bias Learning Rate
+			net_ss.alpha = 0.25;   //Momentum Coefficient
+			net_ss.output_activation_function = &relu2;
+			net_ss.hidden_activation_function = &relu2;
+
+			init_ann(&net_ss);
+
+
+			hasTrained = 0;
+
+			int loc = -1;
+			while (1) {
+				/* Get sysTick value and check if it's time to execute the task */
+				msTick = HAL_GetTick();
+				if (msTick % DATA_PERIOD_MS == 0 && msTickPrev != msTick) {
+					msTickPrev = msTick;
+					if (hasTrained){
+						loc = Test_ANN_SM(&net_ss, loc);
+					}
+				}
+
+				if (!hasTrained) {
+					printf("Press User Button to Start Training\n");
+					User_Button_Wait();
+					TrainOrientation_SM(&net_ss);
+					hasTrained = 1;
+				}
+			}
+		}
+
+
+		if(ENABLE_EMBEDDED_ML_STATE_MACHINE_MOTION_CLASSIFICATION_SIX_FEATURE == 1){
+
+
+			printf("\n\nEmbeddedML State Machine Six Feature Extraction and Classification\n\n");
+
+			Ms_Init();
+
+			result = 0;
+			if (BSP_MOTION_SENSOR_SetOutputDataRate(0, MOTION_GYRO, 833.0f) != BSP_ERROR_NONE) result--;
+			if (BSP_MOTION_SENSOR_GetOutputDataRate(0, MOTION_GYRO, &outputDataRate) != BSP_ERROR_NONE) result--;
+			if (outputDataRate != 833.0f) result--;
+			if (result < 0){
+				printf("Data Rate Error %i\n", result);
+			}
+
+			result = 0;
+			if (BSP_MOTION_SENSOR_SetFullScale(0, MOTION_GYRO, 500) != BSP_ERROR_NONE) result--;
+			if (BSP_MOTION_SENSOR_GetFullScale(0, MOTION_GYRO, &fullScale) != BSP_ERROR_NONE) result--;
+			if (fullScale != 500) result--;
+			if (result < 0){
+				printf("Full Scale Error %i\n", result);
+			}
+
+			printf("Gyro Full Scale Range = %i (degrees/sec)\n", fullScale);
+			printf("Gyro Data Rate %0.1f, Sensitivity (milli-degrees/sec) %f\n", outputDataRate, sensitivity);
+
+			result = 0;
+			if (BSP_MOTION_SENSOR_SetFullScale(0, MOTION_ACCELERO, 2) != BSP_ERROR_NONE) result--;
+			if (BSP_MOTION_SENSOR_GetFullScale(0, MOTION_ACCELERO, &fullScale) != BSP_ERROR_NONE) result--;
+			if (fullScale != 2) result--;
+			if (result < 0){
+				printf("Full Scale Error %i\n", result);
+			}
+
+			/* GetOutputDataRate and SetOutputDataRate functions */
+			result = 0;
+			if (BSP_MOTION_SENSOR_SetOutputDataRate(0, MOTION_ACCELERO, 3333.0f) != BSP_ERROR_NONE) result--;
+			if (BSP_MOTION_SENSOR_GetOutputDataRate(0, MOTION_ACCELERO, &outputDataRate) != BSP_ERROR_NONE) result--;
+			if (outputDataRate != 3333.0f) result--;
+
+			result = 0;
+			if (BSP_MOTION_SENSOR_SetOutputDataRate(0, MOTION_ACCELERO, 833.0f) != BSP_ERROR_NONE) result--;
+			if (BSP_MOTION_SENSOR_GetOutputDataRate(0, MOTION_ACCELERO, &outputDataRate) != BSP_ERROR_NONE) result--;
+			if (outputDataRate != 833.0f) result--;
+
+			result = 0;
+			if (BSP_MOTION_SENSOR_GetSensitivity(0, MOTION_ACCELERO, &sensitivity) != BSP_ERROR_NONE) result--;
+			if (result < 0){
+				printf("Sensitivity Error %i\n", result);
+			}
+			printf("Accelerometer Full Scale Range = %i (milli-g)\n", fullScale*1000);
+			printf("Accelerometer Data Rate %0.1f (Hz), Sensitivity (milli-g) %0.1f\n\n", outputDataRate, sensitivity);
+			result = 0;
+
+			/* Initialize the Red LED */
+			if (BSP_LED_Init(LED6) != BSP_ERROR_NONE) result--;
+			/* Initialize the Green LED */
+			if (BSP_LED_Init(LED7) != BSP_ERROR_NONE) result--;
+
+			/* Generate array of random weight values normalized to 1
+			 * and with fixed seed
+			 */
+			srand(1);
+			/* Generate array of random weight values normalized to 1
+			 * and with time based seed
+			 */
+			//srand(time(NULL));
+
+			float weights_initial_ss[108];
+			for (i = 0; i < 108; i++){
+				weights_initial_ss[i] = (float)rand()/RAND_MAX;
+			        printf("weights_initial_ss[%i] %0.5f\n", i, weights_initial_ss[i]);
+			}
+
+			float dedw_ss[108];
+			float bias_ss[15];
+			unsigned int network_topology_ss[3] = { 6, 9, 6 };
+			float output_ss[6];
+
+			for (i = 0; i < 21; i++){
+				bias_ss[i] = 0.5;
+			}
+			for (i = 0; i < 6; i++){
+				output_ss[i] = 0.0;
+			}
+			for (i = 0; i < 108; i++){
+				dedw_ss[i] = 0.0;
+			}
+
+			ANN net_ss;
+			net_ss.weights = weights_initial_ss;
+			net_ss.dedw = dedw_ss;
+			net_ss.bias = bias_ss;
+			net_ss.topology = network_topology_ss;
+			net_ss.n_layers = 3;
+			net_ss.n_weights = 108;
+			net_ss.n_bias = 21;
+			net_ss.output = output_ss;
+
+
+
+
+			net_ss.eta = 0.13;     //Learning Rate
+			net_ss.beta = 0.01;    //Bias Learning Rate
+			net_ss.alpha = 0.25;   //Momentum Coefficient
+			net_ss.output_activation_function = &relu2;
+			net_ss.hidden_activation_function = &relu2;
+
+			init_ann(&net_ss);
+
+
+			hasTrained = 0;
+
+			int loc = -1;
+			while (1) {
+				/* Get sysTick value and check if it's time to execute the task */
+				msTick = HAL_GetTick();
+				if (msTick % DATA_PERIOD_MS == 0 && msTickPrev != msTick) {
+					msTickPrev = msTick;
+					if (hasTrained){
+						loc = Test_ANN_SM_Six_Feature(&net_ss, loc);
+					}
+				}
+
+				if (!hasTrained) {
+					printf("Press User Button to Start Training\n");
+					User_Button_Wait();
+					TrainOrientation_SM_Six_Feature(&net_ss);
+					hasTrained = 1;
+				}
+			}
+		}
+
+		if(ENABLE_EMBEDDED_ML_STATE_MACHINE_MOTION_CLASSIFICATION_GYRO == 1){
+
+
+			printf("\n\nEmbeddedML State Machine Six Feature Extraction and Classification\n\n");
+
+			Ms_Init();
+
+			/* Initialize the Red LED */
+			if (BSP_LED_Init(LED6) != BSP_ERROR_NONE) result--;
+			/* Initialize the Green LED */
+			if (BSP_LED_Init(LED7) != BSP_ERROR_NONE) result--;
+
+			/* Generate array of random weight values normalized to 1
+			 * and with fixed seed
+			 */
+			srand(1);
+			/* Generate array of random weight values normalized to 1
+			 * and with time based seed
+			 */
+			//srand(time(NULL));
+
+			float weights_initial_ss[108];
+			for (i = 0; i < 108; i++){
+				weights_initial_ss[i] = (float)rand()/RAND_MAX;
+			}
+
+			float dedw_ss[108];
+			float bias_ss[15];
+			unsigned int network_topology_ss[3] = { 6, 9, 6 };
+			float output_ss[6];
+
+			for (i = 0; i < 15; i++){
+				bias_ss[i] = 0.5;
+			}
+			for (i = 0; i < 6; i++){
+				output_ss[i] = 0.0;
+			}
+			for (i = 0; i < 108; i++){
+				dedw_ss[i] = 0.0;
+			}
+
+			ANN net_ss;
+			net_ss.weights = weights_initial_ss;
+			net_ss.dedw = dedw_ss;
+			net_ss.bias = bias_ss;
+			net_ss.topology = network_topology_ss;
+			net_ss.n_layers = 3;
+			net_ss.n_weights = 108;
+			net_ss.n_bias = 15;
+			net_ss.output = output_ss;
+
+			net_ss.eta = 0.13;     //Learning Rate
+			net_ss.beta = 0.01;    //Bias Learning Rate
+			net_ss.alpha = 0.25;   //Momentum Coefficient
+			net_ss.output_activation_function = &relu2;
+			net_ss.hidden_activation_function = &relu2;
+
+			init_ann(&net_ss);
+
+
+			hasTrained = 0;
+
+			int loc = -1;
+			while (1) {
+				/* Get sysTick value and check if it's time to execute the task */
+				msTick = HAL_GetTick();
+				if (msTick % DATA_PERIOD_MS == 0 && msTickPrev != msTick) {
+					msTickPrev = msTick;
+					if (hasTrained){
+						loc = Test_ANN_SM_Six_Feature_Gyro(&net_ss, loc);
+					}
+				}
+
+				if (!hasTrained) {
+					printf("Press User Button to Start Training\n");
+					User_Button_Wait();
+					TrainOrientation_SM_Six_Feature_Gyro(&net_ss);
+					hasTrained = 1;
+				}
+			}
+		}
+
+
+
+		if(ENABLE_EMBEDDED_ML_STATE_MACHINE_MOTION_CLASSIFICATION_GYRO_9_FEATURE == 1){
+
+
+			printf("\n\nEmbeddedML State Machine Nine Feature Extraction and Classification\n\n");
+
+			Ms_Init();
+
+			/* Initialize the Red LED */
+			if (BSP_LED_Init(LED6) != BSP_ERROR_NONE) result--;
+			/* Initialize the Green LED */
+			if (BSP_LED_Init(LED7) != BSP_ERROR_NONE) result--;
+
+			/* Generate array of random weight values normalized to 1
+			 * and with fixed seed
+			 */
+			srand(1);
+			/* Generate array of random weight values normalized to 1
+			 * and with time based seed
+			 */
+			//srand(time(NULL));
+
+			float weights_initial_ss[(9 * 9) + (9 * 6)];
+			for (i = 0; i < (9 * 9) + (9 * 6); i++){
+				weights_initial_ss[i] = (float)rand()/RAND_MAX;
+			}
+
+			float dedw_ss[(9 * 9) + (9 * 6)];
+			float bias_ss[15];
+			unsigned int network_topology_ss[3] = { 9, 9, 6 };
+			float output_ss[6];
+
+			for (i = 0; i < 15; i++){
+				bias_ss[i] = 0.5;
+			}
+			for (i = 0; i < 6; i++){
+				output_ss[i] = 0.0;
+			}
+			for (i = 0; i < (9 * 9) + (9 * 6); i++){
+				dedw_ss[i] = 0.0;
+			}
+
+			ANN net_ss;
+			net_ss.weights = weights_initial_ss;
+			net_ss.dedw = dedw_ss;
+			net_ss.bias = bias_ss;
+			net_ss.topology = network_topology_ss;
+			net_ss.n_layers = 3;
+			net_ss.n_weights = (9 * 9) + (9 * 6);
+			net_ss.n_bias = 15;
+			net_ss.output = output_ss;
+
+			net_ss.eta = 0.13;     //Learning Rate
+			net_ss.beta = 0.01;    //Bias Learning Rate
+			net_ss.alpha = 0.25;   //Momentum Coefficient
+			net_ss.output_activation_function = &relu2;
+			net_ss.hidden_activation_function = &relu2;
+
+			init_ann(&net_ss);
+
+			hasTrained = 0;
+
+			int loc = -1;
+			while (1) {
+				/* Get sysTick value and check if it's time to execute the task */
+				msTick = HAL_GetTick();
+				if (msTick % DATA_PERIOD_MS == 0 && msTickPrev != msTick) {
+					msTickPrev = msTick;
+					if (hasTrained){
+						loc = Test_ANN_SM_Nine_Feature_Gyro(&net_ss, loc);
+					}
+				}
+
+				if (!hasTrained) {
+					printf("Press User Button to Start Training\n");
+					User_Button_Wait();
+					TrainOrientation_SM_Nine_Feature_Gyro(&net_ss);
+					hasTrained = 1;
+				}
+			}
+		}
+
+		if(ENABLE_EMBEDDED_ML_STATE_MACHINE_MOTION_CLASSIFICATION_TRANSLATION == 1){
+
+			printf("\n\nEmbeddedML State Machine Translation Motion Feature Extraction and Classification\n\n");
+
+			Ms_Accel_Init();
+
+			/* Initialize the Red LED */
+			if (BSP_LED_Init(LED6) != BSP_ERROR_NONE) result--;
+			/* Initialize the Green LED */
+			if (BSP_LED_Init(LED7) != BSP_ERROR_NONE) result--;
+
+
+
+
+			unsigned int network_topology_ss[3] = { 8, 9, 6 };
+			number_weights_ss = network_topology_ss[0]*network_topology_ss[1] + network_topology_ss[1]*network_topology_ss[2]; // network_topology[0]*network_topology[1] + network_topology[1]*network_topology[2];
+			number_bias_ss = network_topology_ss[1] + network_topology_ss[2];
+			number_outputs_ss = network_topology_ss[2];
+			float output_ss[number_outputs_ss];
+			float dedw_ss[number_weights_ss];
+			float bias_ss[number_bias_ss];
+
+			for (i = 0; i < number_bias_ss; i++){
+				//for (i = 0; i < 15; i++){
+				bias_ss[i] = 0.5;
+			}
+			for (i = 0; i < number_outputs_ss; i++){
+				//for (i = 0; i < 6; i++){
+				output_ss[i] = 0.0;
+			}
+			for (i = 0; i < number_weights_ss; i++){
+				//for (i = 0; i < (8*9 + 9*6); i++){
+				dedw_ss[i] = 0.0;
+			}
+
+			/*
+			 * Generate array of random weight values normalized to 1
+			 * and with fixed seed
+			 */
+
+			srand(1);
+
+			float weights_initial_ss[number_weights_ss];
+
+			for (i = 0; i < number_weights_ss; i++){
+				//for (i = 0; i < (8*9 + 9*6); i++){
+				weights_initial_ss[i] = (float)rand()/RAND_MAX;
+			}
+			ANN net_ss;
+			net_ss.weights = weights_initial_ss;
+			net_ss.dedw = dedw_ss;
+			net_ss.bias = bias_ss;
+			net_ss.topology = network_topology_ss;
+			net_ss.n_layers = 3;
+			net_ss.n_weights = number_weights_ss;
+			net_ss.n_bias = number_bias_ss;
+			net_ss.output = output_ss;
+
+			net_ss.eta = 0.13;     //Learning Rate
+			net_ss.beta = 0.01;    //Bias Learning Rate
+			net_ss.alpha = 0.25;   //Momentum Coefficient
+			net_ss.output_activation_function = &relu2;
+			net_ss.hidden_activation_function = &relu2;
+
+			init_ann(&net_ss);
+
+			hasTrained = 0;
+
+			BSP_LED_Off(LED6);
+			BSP_LED_Off(LED7);
+			int loc = -1;
+			while (1) {
+				/* Get sysTick value and check if it's time to execute the task */
+				msTick = HAL_GetTick();
+				if (msTick % DATA_PERIOD_MS == 0 && msTickPrev != msTick) {
+					msTickPrev = msTick;
+					if (hasTrained){
+						loc = Test_ANN_SM_Translation(&net_ss, loc);
+					}
+				}
+
+				if (!hasTrained) {
+					printf("Press User Button to Start Training\n");
+					User_Button_Wait();
+					TrainOrientation_SM_Translation(&net_ss);
+					hasTrained = 1;
+				}
+			}
+		}
+
+	/* DSP Demonstrations */
+
+	Ms_Accel_Init();
+
+	/* Calibrate Sample Period */
+
+	/*
+	 * Compute high pass filter coefficients with initial estimate for sample_period
+	 */
+
+	sample_period = 2.6e-5;
+
+	W_HP = 2 * 3.1416 * (float)HIGH_PASS_FILTER_FREQUENCY_DSP;
+	I_HP = 2/(W_HP * sample_period);
+		iir_HP_0 = 1 - (1/(1 + I_HP));
+		iir_HP_1 = -iir_HP_0;
+		iir_HP_2 = iir_HP_0*(1 - I_HP);
+
+	/*
+	 * Compute low pass filter coefficients with initial estimate for sample_period
+	 */
+
+	W_LP = 2 * 3.1416 * (float)LOW_PASS_FILTER_FREQUENCY_DSP;
+	I_LP = 2/(W_LP * sample_period);
+		iir_LP_0 = 1/(1 + I_LP);
+		iir_LP_1 = iir_LP_0;
+		iir_LP_2 = iir_LP_0*(1 - I_LP);
+
+	printf("Press User Button to Start Brief Sample Time Calibration\n");
+	User_Button_Wait();
+	plot_time_series_header("-1", "1");
+
+	i = 0;
+	Signal_Filter_Prev_LP = 0;
+	Signal_Filter_Prev_HP = 0;
+	Input_Signal_Prev = 0;
+	msTickPrev = HAL_GetTick();
+	while(i < DSP_CALIBRATION_COUNT){
+				i++;
+				User_Button_Pause();
+				frequency = DSP_SIGNAL_FREQUENCY*(float)(i)/DSP_CALIBRATION_COUNT;
+				loop_time = (float)( HAL_GetTick() - msTickPrev)/1000.0;
+				Input_Signal = (int)40*sin(6.28*frequency*loop_time);
+				Signal_Filter_LP = iir_LP_0*Input_Signal + iir_LP_1*Input_Signal_Prev - iir_LP_2*Signal_Filter_Prev_LP;
+				Signal_Filter_HP =  iir_HP_0*Signal_Filter_LP + iir_HP_1*Signal_Filter_Prev_LP - iir_HP_2*Signal_Filter_Prev_HP;
+			    Signal_Filter_Prev_LP = Signal_Filter_LP;
+				Signal_Filter_Prev_HP = Signal_Filter_HP;
+				if (i % DSP_DISPLAY_INTERVAL == 0){
+					plot_dual_time_series(Input_Signal, Signal_Filter_HP, " ", " ");
+					if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+					if (result < 0){
+						printf("Sampling Error %i\n", result);
+					}
+				}
+			}
+			sample_period = (float)((HAL_GetTick() - msTickPrev)/(float)(i * DSP_DISPLAY_INTERVAL));
+			printf("Calibrated Sample Period = %0.1e\n", sample_period);
+
+
+	/*
+	 * Compute high pass filter coefficients with calibrated sample_period
+	 */
+
+	W_HP_DSP = 2 * 3.1416 * (float)HIGH_PASS_FILTER_FREQUENCY_DSP;
+	I_HP_DSP = 2/(W_HP_DSP * sample_period);
+	if (HP_FILTER_ENABLE_DSP == 1){
+		iir_HP_0_DSP = 1 - (1/(1 + I_HP_DSP));
+		iir_HP_1_DSP = -iir_HP_0_DSP;
+		iir_HP_2_DSP = (1/(1 + I_HP_DSP))*(1 - I_HP_DSP);
+	}
+	if (HP_FILTER_ENABLE_DSP == 0){
+		iir_HP_0_DSP = 1;
+		iir_HP_1_DSP = 0;
+		iir_HP_2_DSP = 0;
+	}
+
+	/*
+	 * Compute low pass filter coefficients with calibrated sample_period
+	 */
+
+	W_LP_DSP = 2 * 3.1416 * (float)LOW_PASS_FILTER_FREQUENCY_DSP;
+	I_LP_DSP = 2/(W_LP_DSP * sample_period);
+	if (LP_FILTER_ENABLE_DSP == 1){
+		iir_LP_0_DSP = 1/(1 + I_LP_DSP);
+		iir_LP_1_DSP = iir_LP_0_DSP;
+		iir_LP_2_DSP = iir_LP_0_DSP*(1 - I_LP_DSP);
+	}
+	if (LP_FILTER_ENABLE_DSP == 0){
+		iir_LP_0_DSP = 1;
+		iir_LP_1_DSP = 0;
+		iir_LP_2_DSP = 0;
+	}
+
+
+	printf("Press User Button to Start DSP Filter Demonstration\n");
+	plot_time_series_header("-1", "1");
+	User_Button_Wait();
+
+	while (1){
+		printf("Low Pass Filter Corner Frequency: %0.2f rad/sec\n", LOW_PASS_FILTER_FREQUENCY_DSP);
+		printf("High Pass Filter Corner Frequency: %0.2f rad/sec\n", HIGH_PASS_FILTER_FREQUENCY_DSP);
+		//printf("LP %0.5f\t%0.5f\t%0.5f\n", iir_LP_0_DSP, iir_LP_1_DSP, iir_LP_2_DSP);
+		//printf("HP %0.5f\t%0.5f\t%0.5f\n", iir_HP_0_DSP, iir_HP_1_DSP, iir_HP_2_DSP);
+		printf("Chirp Signal Minimum Frequency = 0 Hz and Maximum Frequency = %0.1f Hz", DSP_SIGNAL_FREQUENCY);
+		i = 0;
+		msTickPrev = HAL_GetTick();
+		Signal_Filter_Prev_LP = 0;
+		Signal_Filter_Prev_HP = 0;
+		Input_Signal_Prev = 0;
+		k = 0;
+
+		if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+		if (result < 0){
+			printf("Sampling Error %i\n", result);
+		}
+
+		while(i < DSP_SAMPLE_COUNT){
+			i++;
+			//User_Button_Pause();
+			frequency = (float)(4.0*axes.zval)/1000.0;
+			if (frequency < 0.0){
+				frequency = 0.0;
+			}
+			//frequency = DSP_SIGNAL_FREQUENCY*(float)(i)/DSP_SAMPLE_COUNT;
+			loop_time = (float)( HAL_GetTick() - msTickPrev)/1000.0;
+			Input_Signal = (int)40*sin(6.28*frequency*loop_time);
+			Signal_Filter_LP = iir_LP_0_DSP*Input_Signal + iir_LP_1_DSP*Input_Signal_Prev - iir_LP_2_DSP*Signal_Filter_Prev_LP;
+			Signal_Filter_HP = iir_HP_0_DSP*Signal_Filter_LP + iir_HP_1_DSP*Signal_Filter_Prev_LP - iir_HP_2_DSP*Signal_Filter_Prev_HP;
+			Input_Signal_Prev = Input_Signal;
+
+			Signal_Filter_Prev_LP = Signal_Filter_LP;
+			Signal_Filter_Prev_HP = Signal_Filter_HP;
+
+			if (i % DSP_DISPLAY_INTERVAL == 0){
+				plot_single_time_series((int)Signal_Filter_HP, "*");
+				if (BSP_MOTION_SENSOR_GetAxes(0, MOTION_ACCELERO, &axes) != BSP_ERROR_NONE) result--;
+				if (result < 0){
+					printf("Sampling Error %i\n", result);
+				}
+			}
+
+		}
+		//printf("Total Time = %0.3f (secs) \t Sample Period = %0.1e (secs) Point Period = %0.1e\n", (float)((HAL_GetTick() - msTickPrev)/1000.0), (float)((HAL_GetTick() - msTickPrev)/(float)(i * 1000.0)), 1000.0*(float)((HAL_GetTick() - msTickPrev)/(float)(i * DSP_DISPLAY_INTERVAL)));
+		printf("Press User Button to Continue DSP Filter Demonstration\n");
+			plot_time_series_header("-1", "1");
+			User_Button_Wait();
+	}
+}
+
+void plot_single_time_series(int plot_1_disp, char * symbol_1)
+{
+	int i;
+	int plot_1_tab, plot_1_add;
+
+	plot_1_disp = 40 + plot_1_disp;
+	/* Limit displacement to 80 character terminal display */
+	if (plot_1_disp < 0){
+		plot_1_disp = 0;
+	}
+	if (plot_1_disp > 80){
+		plot_1_disp = 80;
+	}
+
+	/*  Determine number of 8-space tab characters equal plot position */
+	plot_1_tab = floor(plot_1_disp/8);
+
+	/* Determine remaining character spaces required */
+	plot_1_add = plot_1_disp - plot_1_tab * 8;
+
+	/* Print tabs */
+	for (i = 0; i < plot_1_tab; i++){
+		printf("\t");
+	}
+	/* Print spaces */
+	for (i = 0; i < plot_1_add; i++){
+		printf(" ");
+	}
+	/* Print symbol */
+	printf("%s\n", symbol_1);
+
+}
+
+void plot_dual_time_series(int plot_1_disp, int plot_2_disp, char * symbol_1, char * symbol_2)
+{
+	int i;
+	int plot_1_tab, plot_1_add, plot_2_tab, plot_2_add;
+
+	plot_1_disp = 40 + plot_1_disp;
+	plot_2_disp = 40 + plot_2_disp;
+	/* Limit displacement to 80 character terminal display */
+	if (plot_1_disp < 0){
+		plot_1_disp = 0;
+	}
+	if (plot_1_disp > 80){
+		plot_1_disp = 80;
+	}
+	if (plot_2_disp < 0){
+		plot_2_disp = 0;
+	}
+	if (plot_2_disp > 80){
+		plot_2_disp = 80;
+	}
+	/*  Determine number of 8-space tab characters equal plot position */
+	plot_1_tab = floor(plot_1_disp/8);
+	plot_2_tab = floor(plot_2_disp/8);
+	/* Determine remaining character spaces required */
+	plot_1_add = plot_1_disp - plot_1_tab * 8;
+	plot_2_add = plot_2_disp - plot_2_tab * 8;
+	/* Print tabs */
+	for (i = 0; i < plot_1_tab; i++){
+		printf("\t");
+	}
+	/* Print spaces */
+	for (i = 0; i < plot_1_add; i++){
+		printf(" ");
+	}
+	/* Print symbol */
+	printf("%s\n", symbol_1);
+
+	/* Print tabs */
+	for (i = 0; i < plot_2_tab; i++){
+		printf("\t");
+	}
+	/* Print spaces */
+	for (i = 0; i < plot_2_add; i++){
+		printf(" ");
+	}
+	/* Print symbol */
+	printf("%s\n", symbol_2);
+}
+
+void plot_dual_time_series_compass(int plot_1_disp, int plot_2_disp, char * symbol_1, char * symbol_2)
+{
+	int i;
+	int plot_1_tab, plot_1_add, plot_2_tab, plot_2_add;
+
+	plot_1_disp = 80*plot_1_disp/360;
+	plot_2_disp = 80*plot_2_disp/360;
+	/* Limit displacement to 80 character terminal display */
+	if (plot_1_disp < 0){
+		plot_1_disp = 0;
+	}
+	if (plot_1_disp > 80){
+		plot_1_disp = 80;
+	}
+	if (plot_2_disp < 0){
+		plot_2_disp = 0;
+	}
+	if (plot_2_disp > 80){
+		plot_2_disp = 80;
+	}
+	/*  Determine number of 8-space tab characters equal plot position */
+	plot_1_tab = floor(plot_1_disp/8);
+	plot_2_tab = floor(plot_2_disp/8);
+	/* Determine remaining character spaces required */
+	plot_1_add = plot_1_disp - plot_1_tab * 8;
+	plot_2_add = plot_2_disp - plot_2_tab * 8;
+	/* Print tabs */
+	for (i = 0; i < plot_1_tab; i++){
+		printf("\t");
+	}
+	/* Print spaces */
+	for (i = 0; i < plot_1_add; i++){
+		printf(" ");
+	}
+	/* Print symbol */
+	printf("%s\n", symbol_1);
+
+	/* Print tabs */
+	for (i = 0; i < plot_2_tab; i++){
+		printf("\t");
+	}
+	/* Print spaces */
+	for (i = 0; i < plot_2_add; i++){
+		printf(" ");
+	}
+	/* Print symbol */
+	printf("%s\n", symbol_2);
+}
+
+void plot_time_series_compass(int plot_1_disp, char * symbol_1)
+{
+	int i;
+	int plot_1_tab, plot_1_add;
+
+	plot_1_disp = 80*plot_1_disp/360;
+
+	/* Limit displacement to 80 character terminal display */
+	if (plot_1_disp < 0){
+		plot_1_disp = 0;
+	}
+	if (plot_1_disp > 80){
+		plot_1_disp = 80;
+	}
+
+	/*  Determine number of 8-space tab characters equal plot position */
+	plot_1_tab = floor(plot_1_disp/8);
+
+	/* Determine remaining character spaces required */
+	plot_1_add = plot_1_disp - plot_1_tab * 8;
+
+	/* Print tabs */
+	for (i = 0; i < plot_1_tab; i++){
+		printf("\t");
+	}
+	/* Print spaces */
+	for (i = 0; i < plot_1_add; i++){
+		printf(" ");
+	}
+	/* Print symbol */
+	printf("%s\n", symbol_1);
+}
+
+void plot_time_series_header(char * LeftFullScaleRange, char * RightFullScaleRange)
+{
+	int i, j;
+	int range_string_length_left, range_string_length_right;
+	range_string_length_left = strlen(LeftFullScaleRange);
+	range_string_length_right = strlen(RightFullScaleRange);
+
+	for (j = 0; j < 3; j++){
+		printf(LeftFullScaleRange);
+		printf(" ");
+		for (i = 0; i < (80 - range_string_length_left + range_string_length_right + 2); i++){
+			printf("_");
+		}
+		printf(" ");
+		printf(RightFullScaleRange);
+		printf("\n");
+		HAL_Delay(500);
+	}
+
+}
+
+void second_time_mark()
+{
+	int i;
+	for (i = 0; i < 40; i++){
+		printf(". ");
+	}
+	printf("\n");
+}
+
+/**
+ * @brief  System Clock Configuration
+ *         The system Clock is configured as follows :
+ *            System Clock source            = PLL (MSI)
+ *            SYSCLK(Hz)                     = 160000000
+ *            HCLK(Hz)                       = 160000000
+ *            AHB Prescaler                  = 1
+ *            APB1 Prescaler                 = 1
+ *            APB2 Prescaler                 = 1
+ *            APB3 Prescaler                 = 1
+ *            MSI Frequency(Hz)              = 4000000
+ *            PLL_MBOOST                     = 1
+ *            PLL_M                          = 1
+ *            PLL_N                          = 80
+ *            PLL_Q                          = 2
+ *            PLL_R                          = 2
+ *            PLL_P                          = 2
+ *            Flash Latency(WS)              = 4
+ * @param  None
+ * @retval None
+ */
+
+
+
+void SystemClock_Config(void)
+{
+	RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+	RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+
+	/* Enable voltage range 1 for frequency above 100 Mhz */
+	__HAL_RCC_PWR_CLK_ENABLE();
+	HAL_PWREx_ControlVoltageScaling(PWR_REGULATOR_VOLTAGE_SCALE1);
+
+	/* Switch to SMPS regulator instead of LDO */
+	HAL_PWREx_ConfigSupply(PWR_SMPS_SUPPLY);
+
+	__HAL_RCC_PWR_CLK_DISABLE();
+
+	/* MSI Oscillator enabled at reset (4Mhz), activate PLL with MSI as source */
+	RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_MSI;
+	RCC_OscInitStruct.MSIState = RCC_MSI_ON;
+	RCC_OscInitStruct.MSIClockRange = RCC_MSIRANGE_4;
+	RCC_OscInitStruct.MSICalibrationValue = RCC_MSICALIBRATION_DEFAULT;
+	RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+	RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_MSI;
+	RCC_OscInitStruct.PLL.PLLMBOOST = RCC_PLLMBOOST_DIV1;
+	RCC_OscInitStruct.PLL.PLLM = 1;
+	RCC_OscInitStruct.PLL.PLLN = 80;
+	RCC_OscInitStruct.PLL.PLLR = 2;
+	RCC_OscInitStruct.PLL.PLLP = 2;
+	RCC_OscInitStruct.PLL.PLLQ = 2;
+	RCC_OscInitStruct.PLL.PLLFRACN= 0;
+	if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+	{
+		/* Initialization Error */
+		while(1);
+	}
+
+	/* Select PLL as system clock source and configure bus clocks dividers */
+	RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | RCC_CLOCKTYPE_PCLK1 | \
+			RCC_CLOCKTYPE_PCLK2  | RCC_CLOCKTYPE_PCLK3);
+	RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+	RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+	RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV1;
+	RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+	RCC_ClkInitStruct.APB3CLKDivider = RCC_HCLK_DIV1;
+	if(HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
+	{
+		/* Initialization Error */
+		while(1);
+	}
+}
+
+/**
+ * @brief  Enable ICACHE with 1-way set-associative configuration.
+ * @param  None
+ * @retval None
+ */
+static void CACHE_Enable(void)
+{
+	/* Configure ICACHE associativity mode */
+	HAL_ICACHE_ConfigAssociativityMode(ICACHE_1WAY);
+
+	/* Enable ICACHE */
+	HAL_ICACHE_Enable();
+}
+
+/**
+ * @brief  This function is executed in case of error occurrence.
+ * @param  None
+ * @retval None
+ */
+void Error_Handler(void)
+{
+	printf("You have an ERROR!\n");
+	while(1)
+	{
+		BSP_LED_Toggle(LED_RED);
+		HAL_Delay(500);
+	}
+}
+
+/**
+ * @brief  Ask user for result.
+ * @param  None
+ * @retval None
+ */
+uint32_t CheckResult(void)
+{
+	printf("Next step loading..\n\n");
+
+	return 0;
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+ * @brief  Reports the name of the source file and the source line number
+ *         where the assert_param error has occurred.
+ * @param  file: pointer to the source file name
+ * @param  line: assert_param error line source number
+ * @retval None
+ */
+void assert_failed(uint8_t* file, uint32_t line)
+{
+	/* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %i\n", file, line) */
+
+	/* Infinite loop */
+	while (1)
+	{
+	}
+}
+#endif /* USE_FULL_ASSERT */
+
+/**
+ * @brief  BSP Push Button callback
+ * @param  Button Specifies the pin connected EXTI line
+ * @retval None.
+ */
+void BSP_PB_Callback(Button_TypeDef Button)
+{
+	if (Button == BUTTON_USER)
+	{
+		UserButtonPressed = SET;
+	}
+}
+
+
+

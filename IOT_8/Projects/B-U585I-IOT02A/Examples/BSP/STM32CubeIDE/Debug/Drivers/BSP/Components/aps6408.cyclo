@@ -1,0 +1,11 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/aps6408/aps6408.c:49:9:APS6408_Read	4
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/aps6408/aps6408.c:98:9:APS6408_Read_DMA	4
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/aps6408/aps6408.c:147:9:APS6408_Write	4
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/aps6408/aps6408.c:196:9:APS6408_Write_DMA	4
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/aps6408/aps6408.c:240:9:APS6408_EnableMemoryMappedMode	5
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/aps6408/aps6408.c:299:9:APS6408_ReadReg	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/aps6408/aps6408.c:343:9:APS6408_WriteReg	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/aps6408/aps6408.c:389:9:APS6408_ReadID	2
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/aps6408/aps6408.c:412:9:APS6408_EnterPowerDown	2
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/aps6408/aps6408.c:431:9:APS6408_LeavePowerDown	2
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/aps6408/aps6408.c:471:9:APS6408_Reset	2

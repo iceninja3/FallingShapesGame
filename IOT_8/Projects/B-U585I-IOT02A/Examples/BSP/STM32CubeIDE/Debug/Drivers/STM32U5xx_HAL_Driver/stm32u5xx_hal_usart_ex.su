@@ -1,0 +1,13 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_usart_ex.c:109:13:HAL_USARTEx_RxFifoFullCallback	16	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_usart_ex.c:124:13:HAL_USARTEx_TxFifoEmptyCallback	16	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_usart_ex.c:174:19:HAL_USARTEx_EnableSlaveMode	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_usart_ex.c:222:19:HAL_USARTEx_DisableSlaveMode	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_usart_ex.c:270:19:HAL_USARTEx_ConfigNSS	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_usart_ex.c:308:19:HAL_USARTEx_EnableFifoMode	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_usart_ex.c:349:19:HAL_USARTEx_DisableFifoMode	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_usart_ex.c:395:19:HAL_USARTEx_SetTxFifoThreshold	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_usart_ex.c:444:19:HAL_USARTEx_SetRxFifoThreshold	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_usart_ex.c:486:19:HAL_USARTEx_SetConfigAutonomousMode	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_usart_ex.c:542:19:HAL_USARTEx_GetConfigAutonomousMode	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_usart_ex.c:565:19:HAL_USARTEx_ClearConfigAutonomousMode	16	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/STM32U5xx_HAL_Driver/Src/stm32u5xx_hal_usart_ex.c:615:13:USARTEx_SetNbDataToProcess	24	static

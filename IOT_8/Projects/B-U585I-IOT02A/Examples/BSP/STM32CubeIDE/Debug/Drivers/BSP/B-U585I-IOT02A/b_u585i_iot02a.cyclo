@@ -1,0 +1,15 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:127:9:BSP_GetVersion	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:136:16:BSP_GetBoardName	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:145:16:BSP_GetBoardID	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:158:9:BSP_LED_Init	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:186:9:BSP_LED_DeInit	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:207:9:BSP_LED_On	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:225:9:BSP_LED_Off	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:243:9:BSP_LED_Toggle	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:261:9:BSP_LED_GetState	4
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:291:9:BSP_PB_Init	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:345:9:BSP_PB_DeInit	2
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:371:9:BSP_PB_GetState	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:381:6:BSP_PB_IRQHandler	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:391:13:BSP_PB_Callback	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a.c:602:13:BUTTON_USER_EXTI_Callback	1

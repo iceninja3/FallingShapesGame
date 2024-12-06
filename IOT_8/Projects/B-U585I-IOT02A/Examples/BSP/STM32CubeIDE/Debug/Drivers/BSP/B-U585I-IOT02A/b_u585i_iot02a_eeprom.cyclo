@@ -1,0 +1,9 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_eeprom.c:89:9:BSP_EEPROM_Init	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_eeprom.c:114:9:BSP_EEPROM_DeInit	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_eeprom.c:142:9:BSP_EEPROM_WritePage	5
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_eeprom.c:175:9:BSP_EEPROM_ReadPage	4
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_eeprom.c:205:9:BSP_EEPROM_ReadBuffer	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_eeprom.c:234:9:BSP_EEPROM_WriteBuffer	21
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_eeprom.c:389:9:BSP_EEPROM_IsDeviceReady	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_eeprom.c:424:16:EEPROM_WriteBytes	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_eeprom.c:448:16:M24LR64_Probe	4

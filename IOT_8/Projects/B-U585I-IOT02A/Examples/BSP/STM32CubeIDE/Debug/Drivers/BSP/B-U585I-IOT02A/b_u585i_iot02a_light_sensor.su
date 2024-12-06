@@ -1,0 +1,17 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:74:9:BSP_LIGHT_SENSOR_Init	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:103:9:BSP_LIGHT_SENSOR_DeInit	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:127:9:BSP_LIGHT_SENSOR_ReadID	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:153:9:BSP_LIGHT_SENSOR_GetCapabilities	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:180:9:BSP_LIGHT_SENSOR_SetGain	32	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:207:9:BSP_LIGHT_SENSOR_GetGain	32	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:234:9:BSP_LIGHT_SENSOR_SetExposureTime	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:262:9:BSP_LIGHT_SENSOR_GetExposureTime	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:292:9:BSP_LIGHT_SENSOR_SetInterMeasurementTime	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:319:9:BSP_LIGHT_SENSOR_GetInterMeasurementTime	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:346:9:BSP_LIGHT_SENSOR_Start	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:371:9:BSP_LIGHT_SENSOR_Stop	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:401:9:BSP_LIGHT_SENSOR_StartFlicker	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:427:9:BSP_LIGHT_SENSOR_StopFlicker	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:455:9:BSP_LIGHT_SENSOR_GetValues	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:483:9:BSP_LIGHT_SENSOR_SetControlMode	32	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_light_sensor.c:515:16:VEML6030_Probe	48	static

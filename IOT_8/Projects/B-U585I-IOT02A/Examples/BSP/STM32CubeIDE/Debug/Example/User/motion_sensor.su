@@ -1,0 +1,9 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/motion_sensor.c:39:6:Ms_Disable	16	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/motion_sensor.c:49:10:Ms_Accel_Init	56	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/motion_sensor.c:95:9:Ms_Gyro_Init	56	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/motion_sensor.c:142:9:Ms_Button_Init	16	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/motion_sensor.c:150:6:User_Button_Wait_Stop	8	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/motion_sensor.c:163:6:User_Button_Wait	8	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/motion_sensor.c:175:9:Mg_Init	56	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/motion_sensor.c:212:9:Ms_Init	56	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/motion_sensor.c:293:9:Ms_demo	120	static

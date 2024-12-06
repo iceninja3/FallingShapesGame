@@ -1,0 +1,5 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/audio_record.c:49:9:AudioRecord_demo	8	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/audio_record.c:103:13:Record_Init	32	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/audio_record.c:124:6:BSP_AUDIO_IN_HalfTransfer_CallBack	16	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/audio_record.c:134:6:BSP_AUDIO_IN_TransferComplete_CallBack	16	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/audio_record.c:144:6:BSP_AUDIO_IN_Error_CallBack	16	static

@@ -1,0 +1,7 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/ospi_nor.c:76:9:OSPI_NOR_demo	7
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/ospi_nor.c:115:13:OSPI_NOR_STR_Mode	11
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/ospi_nor.c:191:13:OSPI_NOR_STR_MM_Mode	12
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/ospi_nor.c:272:13:OSPI_NOR_DTR_Mode	9
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/ospi_nor.c:334:13:OSPI_NOR_DTR_MM_Mode	10
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/ospi_nor.c:410:13:Fill_Buffer	2
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/ospi_nor.c:429:16:RMABuffercmp	3

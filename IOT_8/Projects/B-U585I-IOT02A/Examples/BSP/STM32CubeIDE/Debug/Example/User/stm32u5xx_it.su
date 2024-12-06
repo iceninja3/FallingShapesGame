@@ -1,0 +1,14 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:40:6:NMI_Handler	4	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:49:6:HardFault_Handler	4	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:62:6:MemManage_Handler	4	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:75:6:BusFault_Handler	4	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:88:6:UsageFault_Handler	4	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:101:6:SVC_Handler	4	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:110:6:DebugMon_Handler	4	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:122:6:PendSV_Handler	4	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:134:6:SysTick_Handler	8	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:150:6:GPDMA1_Channel0_IRQHandler	8	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:160:6:GPDMA1_Channel6_IRQHandler	8	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:170:6:EXTI13_IRQHandler	8	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:180:6:DCMI_PSSI_IRQHandler	8	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/stm32u5xx_it.c:190:6:GPDMA1_Channel12_IRQHandler	8	static

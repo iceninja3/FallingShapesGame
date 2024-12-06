@@ -1,0 +1,17 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:71:9:BSP_RANGING_SENSOR_Init	2
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:94:9:BSP_RANGING_SENSOR_DeInit	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:120:9:BSP_RANGING_SENSOR_ReadID	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:146:9:BSP_RANGING_SENSOR_GetCapabilities	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:172:9:BSP_RANGING_SENSOR_ConfigProfile	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:198:9:BSP_RANGING_SENSOR_ConfigROI	4
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:229:9:BSP_RANGING_SENSOR_ConfigIT	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:259:9:BSP_RANGING_SENSOR_GetDistance	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:285:9:BSP_RANGING_SENSOR_Start	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:310:9:BSP_RANGING_SENSOR_Stop	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:336:9:BSP_RANGING_SENSOR_SetAddress	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:362:9:BSP_RANGING_SENSOR_GetAddress	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:388:9:BSP_RANGING_SENSOR_SetPowerMode	5
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:419:9:BSP_RANGING_SENSOR_GetPowerMode	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:447:9:BSP_RANGING_SENSOR_XTalkCalibration	3
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:477:16:VL53L5CX_Probe	6
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/B-U585I-IOT02A/b_u585i_iot02a_ranging_sensor.c:530:16:vl53l5cx_i2c_recover	6

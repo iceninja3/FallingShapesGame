@@ -1,0 +1,6 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/vl53l5cx/porting/platform.c:65:9:RdByte	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/vl53l5cx/porting/platform.c:73:9:WrByte	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/vl53l5cx/porting/platform.c:81:9:WrMulti	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/vl53l5cx/porting/platform.c:90:9:RdMulti	1
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/vl53l5cx/porting/platform.c:99:6:SwapBuffer	2
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/vl53l5cx/porting/platform.c:118:9:WaitMs	2

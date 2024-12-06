@@ -1,0 +1,5 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/ospi_ram.c:58:9:OSPI_RAM_demo	8	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/ospi_ram.c:76:6:OSPI_RAM_ReadWrite	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/ospi_ram.c:143:6:OSPI_RAM_MemoryMapped	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/ospi_ram.c:210:13:Fill_Buffer	32	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Projects/B-U585I-IOT02A/Examples/BSP/Src/ospi_ram.c:229:16:RMABuffercmp	24	static

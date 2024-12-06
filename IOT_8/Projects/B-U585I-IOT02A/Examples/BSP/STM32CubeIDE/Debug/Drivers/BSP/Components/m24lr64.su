@@ -1,0 +1,9 @@
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/m24lr64/m24lr64.c:68:9:M24LR64_RegisterBusIO	24	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/m24lr64/m24lr64.c:109:9:M24LR64_Init	16	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/m24lr64/m24lr64.c:124:9:M24LR64_DeInit	16	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/m24lr64/m24lr64.c:138:9:M24LR64_Write	32	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/m24lr64/m24lr64.c:148:9:M24LR64_Read	32	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/m24lr64/m24lr64.c:159:9:M24LR64_IsReady	16	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/m24lr64/m24lr64.c:178:16:M24LR64_ReadWrap	40	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/m24lr64/m24lr64.c:193:16:M24LR64_WriteWrap	40	static
+/Users/vishal/Desktop/Engr1IT/T_8/IoT_8/Drivers/BSP/Components/m24lr64/m24lr64.c:206:16:M24LR64_IsReadyWrap	24	static
