@@ -20,5 +20,7 @@ This project was made partially through course materials from the Engr1IT (inter
 - Download the IOT folder and fall.py folder. Open the IOT folder with the STMCube32 IDE. Open the fall.py folder with your preferred code editor. Configure both appropriately (you shouldn't need to configure anything in the IOT folder. in the fall.py file you need to change the serial port name)
 - It doesn't really matter in which order you run the files. I would reccomend starting with the fall.py file though for simplicity. There is a "handshake" coded into the project that works best if fall.py is run first.
 
-
+## Notes: 
+- I made this more to learn than for an "excellent" game. However, for the game to be better (i.e. more playable) I would modify the motions to be shorter (maybe 3 segments instead of 5). Also, I would make the speed of the shapes slower or lengthen the game window so the shapes fall for longer.
+- 
 
