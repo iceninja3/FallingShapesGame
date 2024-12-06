@@ -22,5 +22,4 @@ This project was made partially through course materials from the Engr1IT (inter
 
 ## Notes: 
 - I made this more to learn than for an "excellent" game. However, for the game to be better (i.e. more playable) I would modify the motions to be shorter (maybe 3 segments instead of 5). Also, I would make the speed of the shapes slower or lengthen the game window so the shapes fall for longer.
-- 
 
