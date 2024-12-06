@@ -7,7 +7,7 @@ This project was made partially through course materials from the Engr1IT (inter
 - Serial communication (the hard part). This was original. I manually set up serial communication on the STM board and then created a few functions (sendString(), sendChar(), etc.). I used HAL and UART here. The game (coded in python) read the serial with serial from the pyserial package.
 - Falling Shapes game. This was original. The game has shapes falling (squares, triangles, and lines). The user's goal is to keep the shapes from falling. They do this by erasing shapes. They erase shapes by performing the appropriate motion with the board. Once the board identifies the motin, it sends a message over serial to the game indicating one of six fnctions
   - Start game motion performed -> board sends "1!" to game -> Game starts (if game is over or paused)
-  - Start game motion performed -> board sends "2!" to game -> Game pauses (if it was running before)
+  - Pause game motion performed -> board sends "2!" to game -> Game pauses (if it was running before)
   - Stop Game motion performed -> board sends "3!" to game -> Game stops (if it was paused or running). The game window closes/quits and the python file terminates
   - Square motion performed -> board sends "4!" to game -> Deletes all squares currently on the screen
   - Triangle motion performed -> board sends "5!" to game -> Deletes all triangles currently on the screen
