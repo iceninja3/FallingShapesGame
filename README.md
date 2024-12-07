@@ -1,6 +1,9 @@
 ## [Presentation Link](https://docs.google.com/presentation/d/1nt9gRMgprMrjdH6lQ8kB16Lm4ZPe6Ehf_eqI9vMX2Y4/edit#slide=id.g31c968ffbe4_2_91)
 ## [Video Demo Link](https://www.youtube.com/watch?v=UFumihdRavY)
 
+## Quick Summary:
+Went a little above and beyond a required project in the Engr 1IT course at UCLA (Fall 2024). This project lets a user play a game with "falling" shapes (like tetris). To get rid of the shapes, the user needs to perform specific motions with an STM board (that has an accelerometer on it). Machine learning allows the board to identify the user's motions. Serial communication (UART) sends a message from the board to a python file (fall.py) which uses it as input in the falling shapes game.
+
 ## Background: 
 This project was made partially through course materials from the Engr1IT (internet of things) course at UCLA. There are three main components to this project
 - Machine learning enabled by course materials. Connecting to an STM32 board (specifically the STM32585AI something something discovery board), this component allows users to train motions and then identifies the motions as they are performed. For example, let's say the user wants to train the board to recognize the number 3 written with the board. The user trains the board by writing out 3 with the board (segment by segment so like right wait down wait left wait right wait down wait left). If the user then performs this motion (writing out 3), the board should print to console that this motion has been identified as "whatever the user named this motion".
