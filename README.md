@@ -4,7 +4,7 @@
 ## [Video Demo Link](https://www.youtube.com/watch?v=UFumihdRavY)
 
 ## Quick Summary:
-I went a little above and beyond fpr a required project in the Fall 2024 Engr 1IT course at UCLA. This project lets a user play a game with "falling" shapes (sort of like the shapes in tetris). To get rid of the shapes, the user needs to perform specific motions with an STM board that has an accelerometer on it. Machine learning allows the board to identify the user's motions. Serial communication (UART) sends a message from the board to a python file (fall.py) which uses the message as input in the falling shapes game. 
+I went a little above and beyond for a required project in the Fall 2024 Engr 1IT course at UCLA. This project lets a user play a game with "falling" shapes (sort of like the shapes in tetris). To get rid of the shapes, the user needs to perform specific motions with an STM board that has an accelerometer on it. Machine learning allows the board to identify the user's motions. Serial communication (UART) sends a message from the board to a python file (fall.py) which uses the message as input in the falling shapes game. 
 
 Learned how to use Pygame and PySerial, how to manually configure an STM32 board for UART communication using HAL, and picked up a ton of of C! Also learned a little markdown for this README...
 
